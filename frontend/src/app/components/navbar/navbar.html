@@ -1,0 +1,56 @@
+<header class="navbar">
+    <div class="nav-container">
+        <a routerLink="/publicaciones" (click)="cerrarMenu()" class="brand">
+            <img src="logo.png" alt="Logo" class="brand-img" />
+            <span class="brand-name">Utn<span>Social</span></span>
+        </a>
+
+        <button (click)="toggleMenu()" class="icon-btn nav-burger" type="button" aria-label="Menú">
+            <svg class="icon"><use href="#i-menu"/></svg>
+        </button>
+
+        <nav class="nav-links" [class.open]="menuAbierto()">
+            <div class="nav-center">
+                <a routerLink="/publicaciones" routerLinkActive="active" (click)="cerrarMenu()" class="nav-item">
+                    <svg class="icon"><use href="#i-home"/></svg>
+                    Publicaciones
+                </a>
+
+                @if (authService.isLoggedIn()) {
+                <a routerLink="/mi-perfil" routerLinkActive="active" (click)="cerrarMenu()" class="nav-item">
+                    <svg class="icon"><use href="#i-user"/></svg>
+                    Mi Perfil
+                </a>
+                }
+            </div>
+
+            <div class="nav-actions">
+                @if (authService.isLoggedIn()) {
+                <div class="user-info">
+                    <span class="user-chip">
+                        @if (authService.currentUser()?.foto_perfil_url) {
+                        <img [src]="authService.currentUser()!.foto_perfil_url" alt="" class="avatar-xs" />
+                        } @else {
+                        <span class="avatar-xs">
+                            {{ ((authService.currentUser()?.nombre?.[0] || '') + (authService.currentUser()?.apellido?.[0] || '')).toUpperCase() || 'U' }}
+                        </span>
+                        }
+                        <span class="user-greeting">@{{ authService.currentUser()?.username }}</span>
+                    </span>
+                    <button (click)="cerrarMenu(); authService.logout()" class="btn-logout icon-btn danger" type="button" title="Cerrar sesión">
+                        <svg class="icon"><use href="#i-logout"/></svg>
+                    </button>
+                </div>
+                } @else {
+                <a routerLink="/login" routerLinkActive="active" (click)="cerrarMenu()" class="nav-item">
+                    <svg class="icon"><use href="#i-login"/></svg>
+                    Iniciar Sesión
+                </a>
+                <a routerLink="/registro" routerLinkActive="active" (click)="cerrarMenu()" class="btn btn-primary btn-register">
+                    Registrarse
+                </a>
+                }
+            </div>
+        </nav>
+    </div>
+</header>

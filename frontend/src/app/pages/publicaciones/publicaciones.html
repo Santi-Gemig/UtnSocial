@@ -1,0 +1,177 @@
+<div class="feed-layout" [class.guest-layout]="!authService.isLoggedIn()">
+    <!-- Columna lateral de resumen de perfil (solo si está logueado) -->
+    @if (authService.currentUser(); as u) {
+    <aside class="feed-sidebar">
+        <div class="card mini-profile">
+            <div class="mini-profile-cover"></div>
+            <div class="mini-profile-body">
+                @if (u.foto_perfil_url) {
+                <img [src]="u.foto_perfil_url" [alt]="u.nombre" class="mini-profile-avatar" />
+                } @else {
+                <div class="avatar-lg">
+                    {{ ((u.nombre?.[0] || '') + (u.apellido?.[0] || '')).toUpperCase() || 'U' }}
+                </div>
+                }
+                <h3>{{ u.nombre }} {{ u.apellido }}</h3>
+                <div class="handle">@{{ u.username }}</div>
+                <p class="bio">{{ u.descripcion || 'Miembro de la comunidad UtnSocial.' }}</p>
+                <a routerLink="/mi-perfil" class="btn btn-secondary btn-block">Ver mi perfil</a>
+            </div>
+        </div>
+    </aside>
+    }
+
+    <div class="feed-container">
+        <!-- 1. Formulario para Crear Publicación (solo visible si está logueado) -->
+        @if (authService.isLoggedIn()) {
+        <div class="card create-post-card">
+            @if (mensajeError()) {
+            <div class="alert alert-danger">
+                <svg class="icon"><use href="#i-alert"/></svg>
+                {{ mensajeError() }}
+            </div>
+            }
+
+            <form [formGroup]="postForm" (ngSubmit)="crearPublicacion()" class="post-form">
+                <div class="composer-row">
+                    <div class="avatar-ring">
+                        @if (authService.currentUser()?.foto_perfil_url) {
+                        <img [src]="authService.currentUser()!.foto_perfil_url" alt="Avatar" class="author-avatar" />
+                        } @else {
+                        <div class="author-avatar-placeholder">
+                            {{ ((authService.currentUser()?.nombre?.[0] || '') + (authService.currentUser()?.apellido?.[0] || '')).toUpperCase() || 'U' }}
+                        </div>
+                        }
+                    </div>
+
+                    <div class="composer-fields">
+                        <input type="text" formControlName="titulo" placeholder="Título de tu publicación"
+                            class="input-title" />
+
+                        <textarea formControlName="descripcion" rows="2" placeholder="¿Qué estás pensando hoy?"
+                            class="input-desc"></textarea>
+
+                        @if (imagenPostBase64()) {
+                        <div class="image-preview-wrapper">
+                            <img [src]="imagenPostBase64()" alt="Previsualización" class="image-preview" />
+                            <button (click)="quitarImagen()" type="button" class="btn-remove-img" title="Quitar imagen">
+                                <svg class="icon"><use href="#i-x"/></svg>
+                            </button>
+                        </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="post-form-actions">
+                    <label class="btn-add-image">
+                        <svg class="icon"><use href="#i-image"/></svg>
+                        Agregar imagen
+                        <input type="file" (change)="onFileSelected($event)" accept="image/jpeg,image/png,image/webp" class="hidden-file-input" />
+                    </label>
+
+                    <button type="submit" class="btn btn-primary btn-publish" [disabled]="publicando() || postForm.invalid">
+                        <svg class="icon"><use href="#i-send"/></svg>
+                        {{ publicando() ? 'Publicando...' : 'Publicar' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+        } @else {
+        <!-- Banner elegante para Invitados (sin alert ni pantallas rotas) -->
+        <div class="invitado-banner-card">
+            <div class="invitado-banner-content">
+                <span class="invitado-banner-icon">
+                    <svg class="icon"><use href="#i-sparkles"/></svg>
+                </span>
+                <div class="invitado-banner-info">
+                    <h3 class="invitado-title">¡Estás navegando en modo invitado!</h3>
+                    <p class="invitado-desc">
+                        Podés explorar libremente todas las publicaciones de la comunidad.
+                        Para compartir tus propias ideas o dar "Me gusta", iniciá sesión con tu cuenta.
+                    </p>
+                </div>
+            </div>
+            <div class="invitado-banner-actions">
+                <a routerLink="/login" class="btn btn-light btn-invitado-login">Iniciar Sesión</a>
+                <a routerLink="/registro" class="btn btn-outline-light btn-invitado-register">Crear cuenta</a>
+            </div>
+        </div>
+        }
+
+        <!-- 2. Barra de Filtros y Ordenamiento -->
+        <div class="feed-controls">
+            <h2>Publicaciones</h2>
+            <div class="sort-buttons">
+                <button (click)="cambiarOrden('fecha')" [class.active]="ordenActual() === 'fecha'" class="btn-sort"
+                    type="button">
+                    <svg class="icon"><use href="#i-clock"/></svg>
+                    Más recientes
+                </button>
+                <button (click)="cambiarOrden('likes')" [class.active]="ordenActual() === 'likes'" class="btn-sort"
+                    type="button">
+                    <svg class="icon"><use href="#i-flame"/></svg>
+                    Más populares
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. Listado de Publicaciones -->
+        @if (cargando()) {
+        <div class="posts-list">
+            <div class="card skeleton-card">
+                <div class="skeleton-row">
+                    <div class="skeleton sk-avatar"></div>
+                    <div style="flex:1;display:grid;gap:6px">
+                        <div class="skeleton sk-line" style="width:40%"></div>
+                        <div class="skeleton sk-line" style="width:25%"></div>
+                    </div>
+                </div>
+                <div class="skeleton sk-line" style="width:60%;height:16px"></div>
+                <div class="skeleton sk-line"></div>
+                <div class="skeleton sk-line" style="width:85%"></div>
+            </div>
+            <div class="card skeleton-card">
+                <div class="skeleton-row">
+                    <div class="skeleton sk-avatar"></div>
+                    <div style="flex:1;display:grid;gap:6px">
+                        <div class="skeleton sk-line" style="width:35%"></div>
+                        <div class="skeleton sk-line" style="width:20%"></div>
+                    </div>
+                </div>
+                <div class="skeleton sk-line" style="width:50%;height:16px"></div>
+                <div class="skeleton" style="height:180px"></div>
+            </div>
+        </div>
+        } @else if (publicaciones().length === 0) {
+        <div class="empty-state">
+            <div class="empty-icon">
+                <svg class="icon"><use href="#i-file"/></svg>
+            </div>
+            <h3>Aún no hay publicaciones para mostrar</h3>
+            <p>Sé el primero en compartir una idea o imagen con la comunidad.</p>
+        </div>
+        } @else {
+        <div class="posts-list">
+            @for (post of publicaciones(); track post._id) {
+            <app-publicacion-card [publicacion]="post" (eliminada)="onPublicacionEliminada($event)"></app-publicacion-card>
+            }
+        </div>
+
+        <!-- 4. Paginación -->
+        <div class="pagination-controls">
+            <button (click)="paginaAnterior()" [disabled]="offset() === 0" class="btn btn-secondary btn-pagination" type="button">
+                <svg class="icon"><use href="#i-left"/></svg>
+                Anterior
+            </button>
+            <span class="pagination-info">
+                Página {{ (offset() / limit) + 1 }} de {{ Math.ceil(totalPublicaciones() / limit) || 1 }}
+            </span>
+            <button (click)="paginaSiguiente()" [disabled]="offset() + limit >= totalPublicaciones()" class="btn btn-secondary btn-pagination"
+                type="button">
+                Siguiente
+                <svg class="icon"><use href="#i-right"/></svg>
+            </button>
+        </div>
+        }
+    </div>
+</div>

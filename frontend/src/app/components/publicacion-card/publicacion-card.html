@@ -1,0 +1,115 @@
+<article class="card post-card">
+    <!-- Cabecera del post (autor, fecha y botón borrar) -->
+    <header class="post-header">
+        <div class="author-info">
+            <div class="avatar-ring">
+                @if (publicacion.usuario_id?.foto_perfil_url) {
+                <img [src]="publicacion.usuario_id.foto_perfil_url" alt="Foto perfil" class="author-avatar" />
+                } @else {
+                <div class="author-avatar-placeholder">
+                    {{ publicacion.usuario_id?.nombre?.charAt(0) || 'U' }}
+                </div>
+                }
+            </div>
+            <div class="author-meta">
+                <strong class="author-name">
+                    {{ publicacion.usuario_id?.nombre }} {{ publicacion.usuario_id?.apellido }}
+                </strong>
+                <span class="author-handle">@{{ publicacion.usuario_id?.username }} · {{ publicacion.createdAt |
+                    date:'short' }}</span>
+            </div>
+        </div>
+
+        @if (puedeEliminar) {
+        <button (click)="solicitarEliminar()" class="btn-delete-post icon-btn danger" title="Eliminar publicación" type="button">
+            <svg class="icon"><use href="#i-trash"/></svg>
+        </button>
+        }
+    </header>
+
+    <!-- Contenido -->
+    <div class="post-body">
+        <h3 class="post-title">{{ publicacion.titulo }}</h3>
+        <p class="post-text">{{ publicacion.descripcion }}</p>
+
+        @if (publicacion.imagen_url) {
+        <div class="post-image-container">
+            <img [src]="publicacion.imagen_url" [alt]="publicacion.titulo" class="post-image" />
+        </div>
+        }
+    </div>
+
+    <!-- Pie con botón de Like -->
+    <footer class="post-footer">
+        <button (click)="toggleLike()" [class.liked]="yaDioLike" class="btn-like" type="button"
+            [disabled]="cargandoLike">
+            <svg class="icon heart-icon"><use href="#i-heart"/></svg>
+            <span class="like-count">{{ publicacion.likes?.length || 0 }}</span>
+            <span class="like-label">Me gusta</span>
+        </button>
+    </footer>
+
+    <!-- MODAL 1: Confirmación de Eliminación (Reemplaza confirm()) -->
+    @if (mostrarModalEliminar()) {
+    <div class="modal-backdrop" (click)="cancelarEliminar()">
+        <div class="modal-dialog" (click)="$event.stopPropagation()">
+            <div class="modal-icon-wrapper danger-icon">
+                <svg class="icon"><use href="#i-trash"/></svg>
+            </div>
+            <h4 class="modal-title">¿Eliminar publicación?</h4>
+            <p class="modal-description">
+                Esta acción dará de baja tu publicación del muro de forma definitiva.
+            </p>
+            <div class="modal-actions">
+                <button (click)="cancelarEliminar()" class="btn btn-secondary btn-modal-cancel" type="button" [disabled]="eliminando()">
+                    Cancelar
+                </button>
+                <button (click)="confirmarEliminar()" class="btn btn-danger btn-modal-danger" type="button" [disabled]="eliminando()">
+                    {{ eliminando() ? 'Eliminando...' : 'Sí, eliminar' }}
+                </button>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- MODAL 2: Invitación a Iniciar Sesión para Invitados (Reemplaza alert()) -->
+    @if (mostrarModalLogin()) {
+    <div class="modal-backdrop" (click)="cerrarModalLogin()">
+        <div class="modal-dialog" (click)="$event.stopPropagation()">
+            <div class="modal-icon-wrapper auth-icon">
+                <svg class="icon"><use href="#i-lock"/></svg>
+            </div>
+            <h4 class="modal-title">Iniciá sesión para continuar</h4>
+            <p class="modal-description">
+                Debes tener una cuenta iniciada para poder dar "Me gusta" e interactuar en la red.
+            </p>
+            <div class="modal-actions">
+                <button (click)="cerrarModalLogin()" class="btn btn-secondary btn-modal-cancel" type="button">
+                    Cerrar
+                </button>
+                <a routerLink="/login" class="btn btn-primary btn-modal-primary">
+                    Iniciar Sesión
+                </a>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- MODAL 3: Aviso de Error (Reemplaza alert()) -->
+    @if (errorMensaje()) {
+    <div class="modal-backdrop" (click)="cerrarModalError()">
+        <div class="modal-dialog" (click)="$event.stopPropagation()">
+            <div class="modal-icon-wrapper warning-icon">
+                <svg class="icon"><use href="#i-alert"/></svg>
+            </div>
+            <h4 class="modal-title">Atención</h4>
+            <p class="modal-description">{{ errorMensaje() }}</p>
+            <div class="modal-actions single-action">
+                <button (click)="cerrarModalError()" class="btn btn-primary btn-modal-primary" type="button">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+    }
+</article>

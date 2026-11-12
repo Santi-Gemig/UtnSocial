@@ -1,0 +1,53 @@
+### 1. Probar Registro Exitoso (Debe devolver 201 Created y token)
+POST http://localhost:3000/auth/registro
+Content-Type: application/json
+
+{
+  "nombre": "Santiago",
+  "apellido": "Fernandez",
+  "correo": "santiago@test.com",
+  "username": "santi",
+  "password": "Password123!",
+  "fecha_nacimiento": "2000-05-15",
+  "descripcion": "Estudiante de Programación en UTN"
+}
+
+### 2. Probar Registro con Contraseña Débil (Debe devolver 400 Bad Request)
+POST http://localhost:3000/auth/registro
+Content-Type: application/json
+
+{
+  "nombre": "Error",
+  "apellido": "Test",
+  "correo": "error@test.com",
+  "username": "erroruser",
+  "password": "123",
+  "fecha_nacimiento": "2000-01-01"
+}
+
+### 3. Probar Login Exitoso con Correo (Debe devolver 200 OK y token)
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "identificador": "santiago@test.com",
+  "password": "Password123!"
+}
+
+### 4. Probar Login Exitoso con Nombre de Usuario
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "identificador": "santi",
+  "password": "Password123!"
+}
+
+### 5. Probar Login con Contraseña Incorrecta (Debe devolver 401 Unauthorized)
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "identificador": "santi",
+  "password": "PasswordErronea123!"
+}

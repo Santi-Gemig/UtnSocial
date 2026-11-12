@@ -1,0 +1,113 @@
+<div class="perfil-container">
+    @if (usuario(); as u) {
+    <!-- 1. Tarjeta de Cabecera del Perfil -->
+    <div class="card perfil-card">
+        <div class="perfil-header-bg"></div>
+
+        <div class="perfil-content">
+            <div class="avatar-wrapper">
+                @if (u.foto_perfil_url) {
+                <img [src]="u.foto_perfil_url" [alt]="u.nombre" class="perfil-avatar" />
+                } @else {
+                <div class="avatar-fallback">{{ getIniciales() }}</div>
+                }
+            </div>
+
+            <div class="perfil-main-info">
+                <div class="name-badge-row">
+                    <h1 class="user-fullname">{{ u.nombre }} {{ u.apellido }}</h1>
+                    <span class="role-badge" [class.badge-admin]="u.perfil === 'administrador'">
+                        @if (u.perfil === 'administrador') {
+                        <svg class="icon"><use href="#i-shield"/></svg>
+                        Administrador
+                        } @else {
+                        <svg class="icon"><use href="#i-user"/></svg>
+                        Usuario
+                        }
+                    </span>
+                </div>
+                <p class="user-handle">@{{ u.username }}</p>
+                <p class="user-bio">{{ u.descripcion || 'Sin descripción todavía.' }}</p>
+            </div>
+
+            <!-- Fila con datos personales requeridos por la cátedra -->
+            <div class="perfil-details-grid">
+                <div class="detail-item">
+                    <span class="detail-icon">
+                        <svg class="icon"><use href="#i-mail"/></svg>
+                    </span>
+                    <span class="detail-text">
+                        <span class="detail-label">Correo electrónico</span>
+                        <span class="detail-value">{{ u.correo }}</span>
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-icon">
+                        <svg class="icon"><use href="#i-calendar"/></svg>
+                    </span>
+                    <span class="detail-text">
+                        <span class="detail-label">Fecha de nacimiento</span>
+                        <span class="detail-value">{{ u.fecha_nacimiento | date:'dd/MM/yyyy' }}</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Sección: Últimas 3 Publicaciones -->
+    <div class="publicaciones-section">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Mis últimas publicaciones</h2>
+                <p class="section-subtitle">Tus 3 posteos más recientes</p>
+            </div>
+            <a routerLink="/publicaciones" class="btn btn-primary btn-nueva-pub">
+                <svg class="icon"><use href="#i-plus"/></svg>
+                Crear nueva
+            </a>
+        </div>
+
+        @if (cargando()) {
+        <div class="posts-list">
+            <div class="card skeleton-card">
+                <div class="skeleton-row">
+                    <div class="skeleton sk-avatar"></div>
+                    <div style="flex:1;display:grid;gap:6px">
+                        <div class="skeleton sk-line" style="width:40%"></div>
+                        <div class="skeleton sk-line" style="width:25%"></div>
+                    </div>
+                </div>
+                <div class="skeleton sk-line" style="width:60%;height:16px"></div>
+                <div class="skeleton sk-line"></div>
+            </div>
+            <div class="card skeleton-card">
+                <div class="skeleton-row">
+                    <div class="skeleton sk-avatar"></div>
+                    <div style="flex:1;display:grid;gap:6px">
+                        <div class="skeleton sk-line" style="width:30%"></div>
+                        <div class="skeleton sk-line" style="width:20%"></div>
+                    </div>
+                </div>
+                <div class="skeleton sk-line" style="width:50%;height:16px"></div>
+                <div class="skeleton sk-line" style="width:80%"></div>
+            </div>
+        </div>
+        } @else if (ultimasPublicaciones().length === 0) {
+        <div class="empty-state">
+            <div class="empty-icon">
+                <svg class="icon"><use href="#i-file"/></svg>
+            </div>
+            <h3>Todavía no hiciste publicaciones</h3>
+            <p>Comparte tus ideas, novedades o imágenes con el resto de la comunidad.</p>
+            <a routerLink="/publicaciones" class="btn btn-primary">Ir a Publicaciones</a>
+        </div>
+        } @else {
+        <div class="posts-list">
+            @for (post of ultimasPublicaciones(); track post._id) {
+            <app-publicacion-card [publicacion]="post" (eliminada)="onPublicacionEliminada($event)"></app-publicacion-card>
+            }
+        </div>
+        }
+    </div>
+    }
+</div>
