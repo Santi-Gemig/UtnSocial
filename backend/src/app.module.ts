@@ -15,7 +15,9 @@ const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/red-socia
 
 @Module({
   imports: [
-    MongooseModule.forRoot(mongoUri),
+    MongooseModule.forRoot(mongoUri, {
+      serverSelectionTimeoutMS: 5000,
+    }),
     UsuariosModule,
     AutenticacionModule,
     PublicacionesModule,
