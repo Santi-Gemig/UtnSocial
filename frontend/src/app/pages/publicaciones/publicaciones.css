@@ -359,11 +359,13 @@
     gap: 1rem;
     flex-wrap: wrap;
     margin-top: 0.25rem;
-    padding: 0.6rem 0.9rem;
-    border-radius: var(--radius-md);
-    background: linear-gradient(90deg, rgb(168 85 247 / 0.12), rgb(99 102 241 / 0.09), rgb(56 189 248 / 0.12));
-    border: 1px solid rgb(255 255 255 / 0.72);
-    backdrop-filter: blur(10px);
+    padding: 0.75rem 1.15rem;
+    border-radius: var(--radius-lg);
+    background: rgb(255 255 255 / 0.84);
+    border: 1px solid var(--card-glass-border);
+    box-shadow: var(--shadow-sm), inset 0 0 0 1px rgb(99 102 241 / 0.06);
+    backdrop-filter: blur(var(--card-blur));
+    -webkit-backdrop-filter: blur(var(--card-blur));
 }
 
 .feed-controls h2 {
@@ -378,9 +380,8 @@
     padding: 4px;
     gap: 3px;
     border-radius: var(--radius-full);
-    background: rgb(255 255 255 / 0.82);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--card-glass-border);
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
     box-shadow: var(--shadow-xs);
 }
 
