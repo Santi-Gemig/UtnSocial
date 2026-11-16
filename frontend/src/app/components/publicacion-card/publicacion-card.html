@@ -41,10 +41,10 @@
 
     <!-- Pie con botón de Like -->
     <footer class="post-footer">
-        <button (click)="toggleLike()" [class.liked]="yaDioLike" class="btn-like" type="button"
-            [disabled]="cargandoLike">
+        <button (click)="toggleLike()" [class.liked]="yaDioLike()" [class.animating]="animandoLike()"
+            class="btn-like" type="button" [disabled]="cargandoLike()">
             <svg class="icon heart-icon"><use href="#i-heart"/></svg>
-            <span class="like-count">{{ publicacion.likes?.length || 0 }}</span>
+            <span class="like-count">{{ likesCount() }}</span>
             <span class="like-label">Me gusta</span>
         </button>
     </footer>

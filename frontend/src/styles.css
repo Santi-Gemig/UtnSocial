@@ -9,6 +9,7 @@
   --brand-indigo: #6366f1;
   --brand-sky: #38bdf8;
   --brand-gradient: linear-gradient(135deg, var(--brand-violet) 0%, var(--brand-indigo) 50%, var(--brand-sky) 100%);
+  --brand-gradient-hover: linear-gradient(135deg, #9333ea 0%, #4f46e5 50%, #0ea5e9 100%);
 
   --color-primary: #5b5bf0;
   --color-primary-hover: #4a48d8;
@@ -21,15 +22,22 @@
   --color-warning-soft: #fef3c7;
   --color-success-soft: #dcfce7;
 
-  --color-bg: #f3f4f8;
+  --color-bg: #f4f5fb;
   --color-surface: #ffffff;
-  --color-surface-2: #f7f8fb;
-  --color-border: #e6e8ef;
-  --color-border-strong: #d4d7e2;
+  --color-surface-2: #f7f8fc;
+  --color-border: #e4e7f2;
+  --color-border-strong: #d4d7e6;
   --color-text: #0f1222;
   --color-text-2: #3b4157;
   --color-text-muted: #6b7189;
-  --navbar-bg: rgb(255 255 255 / 0.78);
+  --navbar-bg: rgb(255 255 255 / 0.76);
+
+  /* Identidad visual Tricolor Intenso y efecto cristal */
+  --orb-opacity: 0.78;
+  --glow-opacity: 0.48;
+  --card-glass-bg: rgb(255 255 255 / 0.76);
+  --card-glass-border: rgb(168 85 247 / 0.22);
+  --card-blur: 18px;
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -37,11 +45,12 @@
   --radius-full: 999px;
 
   --shadow-xs: 0 1px 2px rgb(15 18 34 / 0.05);
-  --shadow-sm: 0 1px 3px rgb(15 18 34 / 0.06), 0 1px 2px rgb(15 18 34 / 0.04);
-  --shadow-md: 0 8px 20px -6px rgb(15 18 34 / 0.12);
+  --shadow-sm: 0 14px 34px -8px rgb(99 102 241 / 0.22), 0 4px 10px -4px rgb(15 18 34 / 0.06);
+  --shadow-md: 0 18px 38px -10px rgb(99 102 241 / 0.30), 0 6px 14px -4px rgb(168 85 247 / 0.14);
   --shadow-lg: 0 24px 48px -12px rgb(15 18 34 / 0.25);
 
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --t-fast: 150ms var(--ease);
   --t: 220ms var(--ease);
 
@@ -62,14 +71,75 @@ html {
 }
 
 body {
+  position: relative;
   margin: 0;
   font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.55;
   color: var(--color-text);
-  background: var(--color-bg);
+  background-color: #eae4ff;
+  background-image:
+    radial-gradient(950px 580px at 8% 5%, rgb(168 85 247 / 0.34), transparent 70%),
+    radial-gradient(950px 580px at 92% 10%, rgb(56 189 248 / 0.36), transparent 70%),
+    radial-gradient(900px 600px at 50% 95%, rgb(99 102 241 / 0.30), transparent 72%),
+    linear-gradient(135deg, #eae4ff 0%, #e2e7ff 50%, #dff3ff 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   transition: background var(--t), color var(--t);
+}
+
+/* Capa ambiental de orbes difuminados en los 3 colores de marca */
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(88px);
+  opacity: var(--orb-opacity);
+  will-change: transform;
+}
+
+.orb-violet {
+  width: 560px;
+  height: 560px;
+  top: -100px;
+  left: -90px;
+  background: radial-gradient(circle at center, rgb(168 85 247 / 0.92) 0%, rgb(168 85 247 / 0.40) 52%, transparent 78%);
+  animation: floatOrbA 20s ease-in-out infinite alternate;
+}
+
+.orb-sky {
+  width: 580px;
+  height: 580px;
+  top: 20px;
+  right: -110px;
+  background: radial-gradient(circle at center, rgb(56 189 248 / 0.92) 0%, rgb(56 189 248 / 0.38) 52%, transparent 78%);
+  animation: floatOrbB 24s ease-in-out infinite alternate;
+}
+
+.orb-indigo {
+  width: 640px;
+  height: 490px;
+  bottom: -130px;
+  left: 22%;
+  background: radial-gradient(circle at center, rgb(99 102 241 / 0.85) 0%, rgb(168 85 247 / 0.34) 50%, transparent 78%);
+  animation: floatOrbC 26s ease-in-out infinite alternate;
+}
+
+.orb-mid-cross {
+  width: 520px;
+  height: 440px;
+  top: 42%;
+  left: 34%;
+  background: radial-gradient(circle at center, rgb(56 189 248 / 0.46) 0%, rgb(168 85 247 / 0.38) 46%, transparent 76%);
+  animation: floatOrbD 22s ease-in-out infinite alternate;
 }
 
 h1, h2, h3, h4 {
@@ -120,6 +190,8 @@ a {
 
 /* Botones reutilizables */
 .btn {
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -144,26 +216,46 @@ a {
   cursor: not-allowed;
 }
 
+/* Botón Principal con Gradiente de Marca + Efecto Shine en Hover */
 .btn-primary {
-  background: var(--color-primary);
+  background: var(--brand-gradient);
   color: #fff;
-  box-shadow: 0 1px 2px rgb(15 18 34 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.15);
+  box-shadow: 0 4px 14px -4px rgb(99 102 241 / 0.55), inset 0 1px 0 rgb(255 255 255 / 0.25);
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 70%;
+  height: 100%;
+  background: linear-gradient(105deg, transparent 20%, rgb(255 255 255 / 0.35) 50%, transparent 80%);
+  transition: left 0.55s var(--ease);
+  pointer-events: none;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-  box-shadow: 0 6px 16px -6px var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -6px rgb(99 102 241 / 0.65), 0 4px 10px -4px rgb(168 85 247 / 0.4);
+}
+
+.btn-primary:hover:not(:disabled)::after {
+  left: 140%;
 }
 
 .btn-secondary {
-  background: var(--color-surface);
+  background: rgb(255 255 255 / 0.85);
   color: var(--color-text-2);
   border-color: var(--color-border-strong);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--color-surface-2);
-  color: var(--color-text);
+  background: var(--color-primary-soft);
+  border-color: var(--brand-indigo);
+  color: var(--color-primary);
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 14px -6px rgb(99 102 241 / 0.25);
 }
 
 .btn-ghost {
@@ -213,12 +305,50 @@ a {
   color: var(--color-danger);
 }
 
-/* Superficie de tarjeta base */
+/* Superficie de tarjeta cristal sobre el fondo tricolor */
 .card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--card-glass-bg);
+  backdrop-filter: blur(var(--card-blur));
+  -webkit-backdrop-filter: blur(var(--card-blur));
+  border: 1px solid var(--card-glass-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-sm), inset 0 0 0 1px rgb(99 102 241 / 0.06);
+}
+
+/* Indicadores compartidos de contador y acento de sección */
+.char-badge {
+  font-size: 0.74rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  padding: 0.14rem 0.48rem;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  white-space: nowrap;
+  transition: all var(--t-fast);
+}
+
+.char-badge.warn {
+  background: var(--color-warning-soft);
+  color: #b45309;
+  border-color: rgb(217 119 6 / 0.3);
+}
+
+.char-badge.limit {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  border-color: rgb(225 29 72 / 0.35);
+}
+
+.feed-title-pill {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--brand-gradient);
+  box-shadow: 0 0 12px rgb(99 102 241 / 0.65);
+  flex-shrink: 0;
 }
 
 /* Avatares compartidos */
@@ -366,4 +496,24 @@ a {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes floatOrbA {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(45px, 35px) scale(1.08); }
+}
+
+@keyframes floatOrbB {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-50px, 45px) scale(1.06); }
+}
+
+@keyframes floatOrbC {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(35px, -35px) scale(1.07); }
+}
+
+@keyframes floatOrbD {
+  0% { transform: translate(-30px, 20px) scale(0.96); }
+  100% { transform: translate(40px, -30px) scale(1.08); }
 }

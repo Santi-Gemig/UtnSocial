@@ -33,9 +33,25 @@ export class Publicaciones implements OnInit {
   archivoImagen = signal<File | null>(null);
 
   postForm = new FormGroup({
-    titulo: new FormControl('', [Validators.required]),
-    descripcion: new FormControl('', [Validators.required]),
+    titulo: new FormControl('', [
+      Validators.required,
+      Validators.maxLength(80),
+      Validators.pattern(/\S/),
+    ]),
+    descripcion: new FormControl('', [
+      Validators.required,
+      Validators.maxLength(500),
+      Validators.pattern(/\S/),
+    ]),
   });
+
+  get tituloLength(): number {
+    return (this.postForm.controls.titulo.value || '').length;
+  }
+
+  get descripcionLength(): number {
+    return (this.postForm.controls.descripcion.value || '').length;
+  }
 
   ngOnInit(): void {
     this.cargarPublicaciones();

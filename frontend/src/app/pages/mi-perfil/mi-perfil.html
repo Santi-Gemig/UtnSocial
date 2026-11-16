@@ -1,54 +1,61 @@
 <div class="perfil-container">
     @if (usuario(); as u) {
-    <!-- 1. Tarjeta de Cabecera del Perfil -->
-    <div class="card perfil-card">
-        <div class="perfil-header-bg"></div>
+    <!-- 1. Tarjeta de Cabecera del Perfil con halo difuminado tricolor -->
+    <div class="perfil-glow-wrap">
+        <div class="card perfil-card">
+            <div class="perfil-header-bg"></div>
 
-        <div class="perfil-content">
-            <div class="avatar-wrapper">
-                @if (u.foto_perfil_url) {
-                <img [src]="u.foto_perfil_url" [alt]="u.nombre" class="perfil-avatar" />
-                } @else {
-                <div class="avatar-fallback">{{ getIniciales() }}</div>
-                }
-            </div>
+            <div class="perfil-content">
+                <div class="avatar-wrapper">
+                    @if (u.foto_perfil_url) {
+                    <img [src]="u.foto_perfil_url" [alt]="u.nombre" class="perfil-avatar" />
+                    } @else {
+                    <div class="avatar-fallback">{{ getIniciales() }}</div>
+                    }
 
-            <div class="perfil-main-info">
-                <div class="name-badge-row">
-                    <h1 class="user-fullname">{{ u.nombre }} {{ u.apellido }}</h1>
-                    <span class="role-badge" [class.badge-admin]="u.perfil === 'administrador'">
-                        @if (u.perfil === 'administrador') {
-                        <svg class="icon"><use href="#i-shield"/></svg>
-                        Administrador
-                        } @else {
-                        <svg class="icon"><use href="#i-user"/></svg>
-                        Usuario
-                        }
-                    </span>
+                    <button (click)="abrirModalEditar()" class="btn btn-primary btn-edit-profile" type="button">
+                        <svg class="icon"><use href="#i-edit"/></svg>
+                        Editar perfil
+                    </button>
                 </div>
-                <p class="user-handle">@{{ u.username }}</p>
-                <p class="user-bio">{{ u.descripcion || 'Sin descripción todavía.' }}</p>
-            </div>
 
-            <!-- Fila con datos personales requeridos por la cátedra -->
-            <div class="perfil-details-grid">
-                <div class="detail-item">
-                    <span class="detail-icon">
-                        <svg class="icon"><use href="#i-mail"/></svg>
-                    </span>
-                    <span class="detail-text">
-                        <span class="detail-label">Correo electrónico</span>
-                        <span class="detail-value">{{ u.correo }}</span>
-                    </span>
+                <div class="perfil-main-info">
+                    <div class="name-badge-row">
+                        <h1 class="user-fullname">{{ u.nombre }} {{ u.apellido }}</h1>
+                        <span class="role-badge" [class.badge-admin]="u.perfil === 'administrador'">
+                            @if (u.perfil === 'administrador') {
+                            <svg class="icon"><use href="#i-shield"/></svg>
+                            Administrador
+                            } @else {
+                            <svg class="icon"><use href="#i-user"/></svg>
+                            Usuario
+                            }
+                        </span>
+                    </div>
+                    <p class="user-handle">@{{ u.username }}</p>
+                    <p class="user-bio">{{ u.descripcion || 'Sin descripción todavía.' }}</p>
                 </div>
-                <div class="detail-item">
-                    <span class="detail-icon">
-                        <svg class="icon"><use href="#i-calendar"/></svg>
-                    </span>
-                    <span class="detail-text">
-                        <span class="detail-label">Fecha de nacimiento</span>
-                        <span class="detail-value">{{ u.fecha_nacimiento | date:'dd/MM/yyyy' }}</span>
-                    </span>
+
+                <!-- Fila con datos personales requeridos por la cátedra -->
+                <div class="perfil-details-grid">
+                    <div class="detail-item">
+                        <span class="detail-icon">
+                            <svg class="icon"><use href="#i-mail"/></svg>
+                        </span>
+                        <span class="detail-text">
+                            <span class="detail-label">Correo electrónico</span>
+                            <span class="detail-value">{{ u.correo }}</span>
+                        </span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-icon">
+                            <svg class="icon"><use href="#i-calendar"/></svg>
+                        </span>
+                        <span class="detail-text">
+                            <span class="detail-label">Fecha de nacimiento</span>
+                            <span class="detail-value">{{ u.fecha_nacimiento | date:'dd/MM/yyyy' }}</span>
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -58,7 +65,10 @@
     <div class="publicaciones-section">
         <div class="section-header">
             <div>
-                <h2 class="section-title">Mis últimas publicaciones</h2>
+                <h2 class="section-title">
+                    <span class="feed-title-pill"></span>
+                    Mis últimas publicaciones
+                </h2>
                 <p class="section-subtitle">Tus 3 posteos más recientes</p>
             </div>
             <a routerLink="/publicaciones" class="btn btn-primary btn-nueva-pub">
@@ -109,5 +119,111 @@
         </div>
         }
     </div>
+
+    <!-- MODAL DE EDICIÓN DE PERFIL (Solo para el dueño de la cuenta) -->
+    @if (mostrarModalEditar()) {
+    <div class="modal-backdrop" (click)="cerrarModalEditar()">
+        <div class="modal-edit-dialog" (click)="$event.stopPropagation()">
+            <div class="modal-edit-header">
+                <h3>Editar perfil</h3>
+                <button (click)="cerrarModalEditar()" class="icon-btn" type="button" [disabled]="guardandoPerfil()">
+                    <svg class="icon"><use href="#i-x"/></svg>
+                </button>
+            </div>
+
+            <form [formGroup]="editarForm" (ngSubmit)="guardarPerfil()">
+                <div class="modal-edit-body">
+                    @if (errorEditar()) {
+                    <div class="alert alert-danger" style="margin-bottom:0">
+                        <svg class="icon"><use href="#i-alert"/></svg>
+                        {{ errorEditar() }}
+                    </div>
+                    }
+
+                    <div class="edit-avatar-row">
+                        <div class="edit-avatar-preview">
+                            @if (fotoPreview()) {
+                            <img [src]="fotoPreview()" alt="Vista previa" />
+                            } @else {
+                            <span>{{ getIniciales() }}</span>
+                            }
+                        </div>
+
+                        <div class="edit-avatar-actions">
+                            <strong>Foto de perfil</strong>
+                            <div class="edit-avatar-btns">
+                                <label class="btn btn-secondary btn-compact">
+                                    <svg class="icon" style="width:15px;height:15px"><use href="#i-image"/></svg>
+                                    Cambiar foto
+                                    <input type="file" (change)="onFotoPerfilSelected($event)"
+                                        accept="image/jpeg,image/png,image/webp" class="hidden-file-input" />
+                                </label>
+                                @if (fotoPreview()) {
+                                <button (click)="quitarFotoModal()" class="btn btn-secondary btn-compact" type="button">
+                                    Quitar
+                                </button>
+                                }
+                            </div>
+                            <small class="edit-hint">JPEG, PNG o WebP hasta 10 MB (se optimiza en Cloudinary).</small>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-field">
+                            <label for="editNombre">Nombre</label>
+                            <input id="editNombre" type="text" formControlName="nombre" maxlength="50"
+                                class="form-control" [class.input-error]="ef.nombre.touched && ef.nombre.invalid" />
+                            @if (ef.nombre.touched && ef.nombre.invalid) {
+                            <small class="error-text">El nombre es obligatorio.</small>
+                            }
+                        </div>
+
+                        <div class="form-field">
+                            <label for="editApellido">Apellido</label>
+                            <input id="editApellido" type="text" formControlName="apellido" maxlength="50"
+                                class="form-control" [class.input-error]="ef.apellido.touched && ef.apellido.invalid" />
+                            @if (ef.apellido.touched && ef.apellido.invalid) {
+                            <small class="error-text">El apellido es obligatorio.</small>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="editUsername">Nombre de usuario (&#64;arroba)</label>
+                        <input id="editUsername" type="text" formControlName="username" maxlength="30"
+                            class="form-control" [class.input-error]="ef.username.touched && ef.username.invalid" />
+                        @if (ef.username.touched && ef.username.invalid) {
+                        <small class="error-text">Obligatorio, sin espacios y máximo 30 caracteres.</small>
+                        } @else {
+                        <small class="edit-hint">Podés cambiar tu &#64;usuario siempre que no esté ocupado.</small>
+                        }
+                    </div>
+
+                    <div class="form-field">
+                        <label for="editDescripcion">
+                            <span>Descripción</span>
+                            <span class="char-badge"
+                                [class.warn]="descripcionEditLength >= 210 && descripcionEditLength < 250"
+                                [class.limit]="descripcionEditLength >= 250">
+                                {{ descripcionEditLength }} / 250
+                            </span>
+                        </label>
+                        <textarea id="editDescripcion" rows="3" formControlName="descripcion" maxlength="250"
+                            placeholder="Contanos algo sobre vos..." class="form-control"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-edit-footer">
+                    <button (click)="cerrarModalEditar()" class="btn btn-secondary" type="button" [disabled]="guardandoPerfil()">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" [disabled]="guardandoPerfil() || editarForm.invalid">
+                        {{ guardandoPerfil() ? 'Guardando...' : 'Guardar cambios' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    }
     }
 </div>

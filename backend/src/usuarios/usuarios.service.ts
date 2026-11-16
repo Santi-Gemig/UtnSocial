@@ -1,14 +1,17 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, isObjectIdOrHexString } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { Usuario, UsuarioDocument } from './schemas/usuario.schema';
 import { CrearUsuarioDto } from './dto/crear-usuario.dto';
+import { ActualizarUsuarioDto } from './dto/actualizar-usuario.dto';
+import { ImagenesService } from '../publicaciones/imagenes.service';
 
 @Injectable()
 export class UsuariosService {
     constructor(
         @InjectModel(Usuario.name) private usuarioModel: Model<UsuarioDocument>,
+        private readonly imagenes: ImagenesService,
     ) { }
 
     // 1. Crear nuevo usuario (Registro)
@@ -56,10 +59,76 @@ export class UsuariosService {
 
     // 3. Buscar por ID (usado en "Mi Perfil")
     async buscarPorId(id: string): Promise<UsuarioDocument> {
+        if (!isObjectIdOrHexString(id)) {
+            throw new BadRequestException('ID de usuario inválido');
+        }
         const usuario = await this.usuarioModel.findById(id).select('-password').exec();
         if (!usuario) {
             throw new NotFoundException('Usuario no encontrado');
         }
         return usuario;
+    }
+
+    // 4. Actualizar perfil propio (solo dueño autenticado por JWT)
+    async actualizarPerfil(
+        id: string,
+        dto: ActualizarUsuarioDto,
+        archivo?: Express.Multer.File,
+    ) {
+        if (!isObjectIdOrHexString(id)) {
+            throw new BadRequestException('ID de usuario inválido');
+        }
+
+        // Si quiere cambiar el @username, verificamos que ningún otro usuario lo tenga tomado
+        if (dto.username !== undefined) {
+            const usernameLimpio = dto.username.trim();
+            const existeOtro = await this.usuarioModel
+                .findOne({ username: usernameLimpio, _id: { $ne: id } })
+                .exec();
+            if (existeOtro) {
+                throw new BadRequestException('El nombre de usuario ya está en uso');
+            }
+            dto.username = usernameLimpio;
+        }
+
+        let publicId: string | undefined;
+        if (archivo) {
+            const buffer = await this.imagenes.normalizar(archivo);
+            const subida = await this.imagenes.subir(buffer, 'red-social/perfiles');
+            dto.foto_perfil_url = subida.url;
+            publicId = subida.publicId;
+        }
+
+        const cambios: Partial<Usuario> = {};
+        if (dto.nombre !== undefined) cambios.nombre = dto.nombre.trim();
+        if (dto.apellido !== undefined) cambios.apellido = dto.apellido.trim();
+        if (dto.username !== undefined) cambios.username = dto.username;
+        if (dto.descripcion !== undefined) cambios.descripcion = dto.descripcion.trim();
+        if (dto.foto_perfil_url !== undefined) cambios.foto_perfil_url = dto.foto_perfil_url;
+
+        try {
+            const usuario = await this.usuarioModel
+                .findByIdAndUpdate(
+                    id,
+                    { $set: cambios },
+                    { new: true, runValidators: true },
+                )
+                .select('-password')
+                .exec();
+
+            if (!usuario) {
+                throw new NotFoundException('Usuario no encontrado');
+            }
+
+            return {
+                mensaje: 'Perfil actualizado con éxito',
+                usuario,
+            };
+        } catch (error) {
+            if (publicId) {
+                await this.imagenes.eliminar(publicId);
+            }
+            throw error;
+        }
     }
 }

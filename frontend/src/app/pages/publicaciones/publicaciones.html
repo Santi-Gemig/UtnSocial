@@ -24,57 +24,80 @@
     <div class="feed-container">
         <!-- 1. Formulario para Crear Publicación (solo visible si está logueado) -->
         @if (authService.isLoggedIn()) {
-        <div class="card create-post-card">
-            @if (mensajeError()) {
-            <div class="alert alert-danger">
-                <svg class="icon"><use href="#i-alert"/></svg>
-                {{ mensajeError() }}
+        <div class="composer-glow-wrap">
+            <div class="card create-post-card">
+                @if (mensajeError()) {
+                <div class="alert alert-danger">
+                    <svg class="icon"><use href="#i-alert"/></svg>
+                    {{ mensajeError() }}
+                </div>
+                }
+
+                <form [formGroup]="postForm" (ngSubmit)="crearPublicacion()" class="post-form">
+                    <div class="composer-row">
+                        <div class="avatar-ring">
+                            @if (authService.currentUser()?.foto_perfil_url) {
+                            <img [src]="authService.currentUser()!.foto_perfil_url" alt="Avatar" class="author-avatar" />
+                            } @else {
+                            <div class="author-avatar-placeholder">
+                                {{ ((authService.currentUser()?.nombre?.[0] || '') + (authService.currentUser()?.apellido?.[0] || '')).toUpperCase() || 'U' }}
+                            </div>
+                            }
+                        </div>
+
+                        <div class="composer-fields">
+                            <div class="field-header-inline">
+                                <input type="text" formControlName="titulo" maxlength="80"
+                                    placeholder="Título de tu publicación" class="input-title" />
+                                <span class="char-badge"
+                                    [class.warn]="tituloLength >= 65 && tituloLength < 80"
+                                    [class.limit]="tituloLength >= 80">
+                                    {{ tituloLength }} / 80
+                                </span>
+                            </div>
+
+                            <textarea formControlName="descripcion" rows="3" maxlength="500"
+                                placeholder="¿Qué estás pensando hoy?" class="input-desc"></textarea>
+
+                            <div class="desc-counter-row">
+                                <div class="char-bar-track">
+                                    <div class="char-bar-fill"
+                                        [style.width.%]="(descripcionLength / 500) * 100"
+                                        [class.warn]="descripcionLength >= 420 && descripcionLength < 500"
+                                        [class.limit]="descripcionLength >= 500"></div>
+                                </div>
+                                <span class="char-badge"
+                                    [class.warn]="descripcionLength >= 420 && descripcionLength < 500"
+                                    [class.limit]="descripcionLength >= 500">
+                                    {{ descripcionLength }} / 500
+                                </span>
+                            </div>
+
+                            @if (imagenPostBase64()) {
+                            <div class="image-preview-wrapper">
+                                <img [src]="imagenPostBase64()" alt="Previsualización" class="image-preview" />
+                                <button (click)="quitarImagen()" type="button" class="btn-remove-img" title="Quitar imagen">
+                                    <svg class="icon"><use href="#i-x"/></svg>
+                                </button>
+                            </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="post-form-actions">
+                        <label class="btn-add-image">
+                            <svg class="icon"><use href="#i-image"/></svg>
+                            Agregar imagen
+                            <input type="file" (change)="onFileSelected($event)" accept="image/jpeg,image/png,image/webp" class="hidden-file-input" />
+                        </label>
+
+                        <button type="submit" class="btn btn-primary btn-publish" [disabled]="publicando() || postForm.invalid">
+                            <svg class="icon"><use href="#i-send"/></svg>
+                            {{ publicando() ? 'Publicando...' : 'Publicar' }}
+                        </button>
+                    </div>
+                </form>
             </div>
-            }
-
-            <form [formGroup]="postForm" (ngSubmit)="crearPublicacion()" class="post-form">
-                <div class="composer-row">
-                    <div class="avatar-ring">
-                        @if (authService.currentUser()?.foto_perfil_url) {
-                        <img [src]="authService.currentUser()!.foto_perfil_url" alt="Avatar" class="author-avatar" />
-                        } @else {
-                        <div class="author-avatar-placeholder">
-                            {{ ((authService.currentUser()?.nombre?.[0] || '') + (authService.currentUser()?.apellido?.[0] || '')).toUpperCase() || 'U' }}
-                        </div>
-                        }
-                    </div>
-
-                    <div class="composer-fields">
-                        <input type="text" formControlName="titulo" placeholder="Título de tu publicación"
-                            class="input-title" />
-
-                        <textarea formControlName="descripcion" rows="2" placeholder="¿Qué estás pensando hoy?"
-                            class="input-desc"></textarea>
-
-                        @if (imagenPostBase64()) {
-                        <div class="image-preview-wrapper">
-                            <img [src]="imagenPostBase64()" alt="Previsualización" class="image-preview" />
-                            <button (click)="quitarImagen()" type="button" class="btn-remove-img" title="Quitar imagen">
-                                <svg class="icon"><use href="#i-x"/></svg>
-                            </button>
-                        </div>
-                        }
-                    </div>
-                </div>
-
-                <div class="post-form-actions">
-                    <label class="btn-add-image">
-                        <svg class="icon"><use href="#i-image"/></svg>
-                        Agregar imagen
-                        <input type="file" (change)="onFileSelected($event)" accept="image/jpeg,image/png,image/webp" class="hidden-file-input" />
-                    </label>
-
-                    <button type="submit" class="btn btn-primary btn-publish" [disabled]="publicando() || postForm.invalid">
-                        <svg class="icon"><use href="#i-send"/></svg>
-                        {{ publicando() ? 'Publicando...' : 'Publicar' }}
-                    </button>
-                </div>
-            </form>
         </div>
         } @else {
         <!-- Banner elegante para Invitados (sin alert ni pantallas rotas) -->
@@ -100,7 +123,7 @@
 
         <!-- 2. Barra de Filtros y Ordenamiento -->
         <div class="feed-controls">
-            <h2>Publicaciones</h2>
+            <h2><span class="feed-title-pill"></span> Publicaciones</h2>
             <div class="sort-buttons">
                 <button (click)="cambiarOrden('fecha')" [class.active]="ordenActual() === 'fecha'" class="btn-sort"
                     type="button">

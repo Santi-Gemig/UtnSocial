@@ -1,5 +1,5 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -53,7 +53,21 @@ export class AuthService {
         );
     }
 
-    // 3. Cerrar sesión
+    // 3. Actualizar perfil propio (solo usuario logueado vía JWT)
+    actualizarPerfil(datos: FormData): Observable<{ mensaje: string; usuario: Usuario }> {
+        const headers = new HttpHeaders({
+            Authorization: `Bearer ${this.token()}`,
+        });
+        return this.http
+            .patch<{ mensaje: string; usuario: Usuario }>(
+                `${environment.apiUrl}/usuarios/mi-perfil`,
+                datos,
+                { headers },
+            )
+            .pipe(tap((res) => this.guardarSesion(this.token()!, res.usuario)));
+    }
+
+    // 4. Cerrar sesión
     logout(): void {
         localStorage.removeItem('token');
         localStorage.removeItem('usuario');

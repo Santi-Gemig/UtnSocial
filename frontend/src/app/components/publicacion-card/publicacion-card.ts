@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { PublicacionItem, PublicacionesService } from '../../services/publicaciones';
@@ -10,14 +10,19 @@ import { AuthService } from '../../services/auth';
   styleUrl: './publicacion-card.css',
   templateUrl: './publicacion-card.html',
 })
-export class PublicacionCard {
+export class PublicacionCard implements OnInit, OnChanges {
   @Input({ required: true }) publicacion!: PublicacionItem;
   @Output() eliminada = new EventEmitter<string>();
 
   private publicacionesService = inject(PublicacionesService);
   authService = inject(AuthService);
 
-  cargandoLike = false;
+  // Signals reactivos para actualizar Likes en vivo (Angular Zoneless) sin recargar ni reordenar
+  cargandoLike = signal<boolean>(false);
+  animandoLike = signal<boolean>(false);
+  likesCount = signal<number>(0);
+  yaDioLike = signal<boolean>(false);
+
   eliminando = signal<boolean>(false);
 
   // Estados de Modales (reemplaza confirm() y alert())
@@ -25,11 +30,23 @@ export class PublicacionCard {
   mostrarModalLogin = signal<boolean>(false);
   errorMensaje = signal<string | null>(null);
 
-  // Comprueba si el usuario actual ya le dio like
-  get yaDioLike(): boolean {
+  private timerAnimacion?: ReturnType<typeof setTimeout>;
+
+  ngOnInit(): void {
+    this.sincronizarLikes();
+  }
+
+  ngOnChanges(): void {
+    this.sincronizarLikes();
+  }
+
+  private sincronizarLikes(): void {
+    const likes = this.publicacion?.likes || [];
     const miId = this.authService.currentUser()?._id;
-    if (!miId || !this.publicacion.likes) return false;
-    return this.publicacion.likes.some((id: any) => id === miId || id?._id === miId);
+    this.likesCount.set(likes.length);
+    this.yaDioLike.set(
+      !!miId && likes.some((id: any) => id === miId || id?._id === miId),
+    );
   }
 
   // Comprueba si puede eliminar (si es el autor o admin)
@@ -41,36 +58,63 @@ export class PublicacionCard {
     return esAutor || esAdmin;
   }
 
-  // Toggle de Like (Dar o Quitar)
+  // Toggle de Like en vivo con actualización optimista y animación burst
   toggleLike(): void {
     if (!this.authService.isLoggedIn()) {
       this.mostrarModalLogin.set(true);
       return;
     }
-    if (this.cargandoLike) return;
-    this.cargandoLike = true;
+    if (this.cargandoLike()) return;
 
-    const miId = this.authService.currentUser()?._id!;
+    const miId = this.authService.currentUser()?._id;
+    if (!miId) return;
 
-    if (this.yaDioLike) {
+    const estabaLikeado = this.yaDioLike();
+    const likesPrevios = [...(this.publicacion.likes || [])];
+
+    // Actualización inmediata en vivo sin esperar recarga y sin alterar el orden del feed
+    this.cargandoLike.set(true);
+    this.yaDioLike.set(!estabaLikeado);
+    this.likesCount.update((c) => Math.max(0, c + (estabaLikeado ? -1 : 1)));
+
+    if (!estabaLikeado) {
+      if (this.timerAnimacion) clearTimeout(this.timerAnimacion);
+      this.animandoLike.set(true);
+      this.timerAnimacion = setTimeout(() => this.animandoLike.set(false), 520);
+    }
+
+    if (estabaLikeado) {
       this.publicacionesService.quitarLike(this.publicacion._id).subscribe({
-        next: () => {
-          this.publicacion.likes = this.publicacion.likes.filter((id: any) => id !== miId && id?._id !== miId);
-          this.cargandoLike = false;
+        next: (res) => {
+          this.publicacion.likes = likesPrevios.filter((id: any) => id !== miId && id?._id !== miId);
+          if (typeof res?.totalLikes === 'number') {
+            this.likesCount.set(res.totalLikes);
+          }
+          this.cargandoLike.set(false);
         },
         error: (err) => {
-          this.cargandoLike = false;
+          this.publicacion.likes = likesPrevios;
+          this.sincronizarLikes();
+          this.cargandoLike.set(false);
           this.errorMensaje.set(err.error?.message || 'Error al quitar me gusta');
         },
       });
     } else {
       this.publicacionesService.darLike(this.publicacion._id).subscribe({
-        next: () => {
-          this.publicacion.likes.push(miId);
-          this.cargandoLike = false;
+        next: (res) => {
+          if (!likesPrevios.some((id: any) => id === miId || id?._id === miId)) {
+            this.publicacion.likes = [...likesPrevios, miId];
+          }
+          if (typeof res?.totalLikes === 'number') {
+            this.likesCount.set(res.totalLikes);
+          }
+          this.cargandoLike.set(false);
         },
         error: (err) => {
-          this.cargandoLike = false;
+          this.publicacion.likes = likesPrevios;
+          this.sincronizarLikes();
+          this.animandoLike.set(false);
+          this.cargandoLike.set(false);
           this.errorMensaje.set(err.error?.message || 'Error al dar me gusta');
         },
       });
