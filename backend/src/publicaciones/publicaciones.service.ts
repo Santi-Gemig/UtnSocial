@@ -21,17 +21,17 @@ export class PublicacionesService implements OnModuleInit {
 
     async onModuleInit() {
         try {
-            // Sincroniza likes_count en documentos antiguos si hiciera falta
+
             await this.publicacionModel.updateMany(
                 { likes_count: { $exists: false } },
                 [{ $set: { likes_count: { $size: { $ifNull: ['$likes', []] } } } }]
             );
         } catch {
-            // Si la base aún está vacía o iniciando, continúa normalmente
+
         }
     }
 
-    // 1. Crea publicación vinculada al usuario logueado (sube imagen a Cloudinary si se envía archivo)
+    //  Crea publicación vinculada al usuario logueado (sube imagen a Cloudinary si se envía archivo)
     async crear(
         crearPublicacionDto: CrearPublicacionDto,
         usuarioId: string,
@@ -67,7 +67,7 @@ export class PublicacionesService implements OnModuleInit {
         }
     }
 
-    // 2. Lista publicaciones con ordenamiento, filtro por usuario y paginación
+    //  Lista publicaciones con ordenamiento, filtro por usuario y paginación
     async listar(params: {
         orden?: 'fecha' | 'likes';
         usuarioId?: string;
@@ -114,8 +114,22 @@ export class PublicacionesService implements OnModuleInit {
             publicaciones,
         };
     }
+    // Obtener una publicación individual por su ID (para la pantalla de detalle)
+    async obtenerPorId(id: string) {
+        this.validarId(id);
+        const publicacion = await this.publicacionModel
+            .findOne({ _id: id, activo: true })
+            .populate('usuario_id', 'nombre apellido username foto_perfil_url perfil')
+            .exec();
 
-    // 3. Dar "Me gusta" 
+        if (!publicacion) {
+            throw new NotFoundException('Publicación no encontrada');
+        }
+
+        return publicacion;
+    }
+
+    // Dar "Me gusta" 
     async darLike(publicacionId: string, usuarioId: string) {
         this.validarId(publicacionId);
         const publicacion = await this.publicacionModel.findOne({
@@ -144,7 +158,7 @@ export class PublicacionesService implements OnModuleInit {
         };
     }
 
-    // 4. Quitar "Me gusta"
+    //  Quitar "Me gusta"
     async quitarLike(publicacionId: string, usuarioId: string) {
         this.validarId(publicacionId);
         const publicacion = await this.publicacionModel.findOne({
@@ -173,7 +187,7 @@ export class PublicacionesService implements OnModuleInit {
         };
     }
 
-    // 5. Baja lógica: solo autor o administrador
+    //  Baja lógica: solo autor o administrador
     async bajaLogica(publicacionId: string, usuarioId: string, rolUsuario: string) {
         this.validarId(publicacionId);
         const publicacion = await this.publicacionModel.findById(publicacionId);

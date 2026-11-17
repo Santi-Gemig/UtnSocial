@@ -24,7 +24,7 @@ import { MAX_IMAGEN_BYTES } from './imagenes.service';
 export class PublicacionesController {
     constructor(private readonly publicacionesService: PublicacionesService) { }
 
-    // 1. Crear publicación con Multer y Cloudinary (como en clase 11) - Status 201 Created
+    //  Crea publicación con Multer y Cloudinary (como en clase 11) - Status 201 Created
     @Post()
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.CREATED)
@@ -46,7 +46,7 @@ export class PublicacionesController {
         return this.publicacionesService.crear(crearPublicacionDto, usuarioId, archivo);
     }
 
-    // 2. Listar publicaciones (Paginación, Ordenamiento por fecha/likes, Filtro por usuario)
+    // Lista publicaciones (Paginación, Ordenamiento por fecha/likes, Filtro por usuario)
     @Get()
     async listar(
         @Query('orden') orden?: 'fecha' | 'likes',
@@ -57,7 +57,13 @@ export class PublicacionesController {
         return this.publicacionesService.listar({ orden, usuarioId, limit, offset });
     }
 
-    // 3. Dar "Me gusta" (Requiere Login)
+    // Obtener una publicación individual por ID
+    @Get(':id')
+    async obtenerPorId(@Param('id') id: string) {
+        return this.publicacionesService.obtenerPorId(id);
+    }
+
+    //  Dar "Me gusta" (Requiere Login)
     @Post(':id/like')
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)
@@ -66,7 +72,7 @@ export class PublicacionesController {
         return this.publicacionesService.darLike(id, usuarioId);
     }
 
-    // 4. Quitar "Me gusta" (Requiere Login)
+    // Quitar "Me gusta" (Requiere Login)
     @Delete(':id/like')
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)
@@ -75,7 +81,7 @@ export class PublicacionesController {
         return this.publicacionesService.quitarLike(id, usuarioId);
     }
 
-    // 5. Baja lógica de publicación (Solo autor o admin)
+    // Baja lógica de publicación (Solo autor o admin)
     @Delete(':id')
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)

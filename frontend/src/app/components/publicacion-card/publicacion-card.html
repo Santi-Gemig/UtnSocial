@@ -21,8 +21,11 @@
         </div>
 
         @if (puedeEliminar) {
-        <button (click)="solicitarEliminar()" class="btn-delete-post icon-btn danger" title="Eliminar publicación" type="button">
-            <svg class="icon"><use href="#i-trash"/></svg>
+        <button (click)="solicitarEliminar()" class="btn-delete-post icon-btn danger" title="Eliminar publicación"
+            type="button">
+            <svg class="icon">
+                <use href="#i-trash" />
+            </svg>
         </button>
         }
     </header>
@@ -39,14 +42,23 @@
         }
     </div>
 
-    <!-- Pie con botón de Like -->
+    <!-- Pie con botón de Like y acceso a Comentarios / Detalle -->
     <footer class="post-footer">
-        <button (click)="toggleLike()" [class.liked]="yaDioLike()" [class.animating]="animandoLike()"
-            class="btn-like" type="button" [disabled]="cargandoLike()">
-            <svg class="icon heart-icon"><use href="#i-heart"/></svg>
+        <button (click)="toggleLike()" [class.liked]="yaDioLike()" [class.animating]="animandoLike()" class="btn-like"
+            type="button" [disabled]="cargandoLike()">
+            <svg class="icon heart-icon">
+                <use href="#i-heart" />
+            </svg>
             <span class="like-count">{{ likesCount() }}</span>
             <span class="like-label">Me gusta</span>
         </button>
+
+        <a [routerLink]="['/publicaciones', publicacion._id]" class="btn-comments">
+            <svg class="icon">
+                <use href="#i-file" />
+            </svg>
+            <span>Comentarios / Ver publicación</span>
+        </a>
     </footer>
 
     <!-- MODAL 1: Confirmación de Eliminación (Reemplaza confirm()) -->
@@ -54,17 +66,21 @@
     <div class="modal-backdrop" (click)="cancelarEliminar()">
         <div class="modal-dialog" (click)="$event.stopPropagation()">
             <div class="modal-icon-wrapper danger-icon">
-                <svg class="icon"><use href="#i-trash"/></svg>
+                <svg class="icon">
+                    <use href="#i-trash" />
+                </svg>
             </div>
             <h4 class="modal-title">¿Eliminar publicación?</h4>
             <p class="modal-description">
                 Esta acción dará de baja tu publicación del muro de forma definitiva.
             </p>
             <div class="modal-actions">
-                <button (click)="cancelarEliminar()" class="btn btn-secondary btn-modal-cancel" type="button" [disabled]="eliminando()">
+                <button (click)="cancelarEliminar()" class="btn btn-secondary btn-modal-cancel" type="button"
+                    [disabled]="eliminando()">
                     Cancelar
                 </button>
-                <button (click)="confirmarEliminar()" class="btn btn-danger btn-modal-danger" type="button" [disabled]="eliminando()">
+                <button (click)="confirmarEliminar()" class="btn btn-danger btn-modal-danger" type="button"
+                    [disabled]="eliminando()">
                     {{ eliminando() ? 'Eliminando...' : 'Sí, eliminar' }}
                 </button>
             </div>
@@ -77,7 +93,9 @@
     <div class="modal-backdrop" (click)="cerrarModalLogin()">
         <div class="modal-dialog" (click)="$event.stopPropagation()">
             <div class="modal-icon-wrapper auth-icon">
-                <svg class="icon"><use href="#i-lock"/></svg>
+                <svg class="icon">
+                    <use href="#i-lock" />
+                </svg>
             </div>
             <h4 class="modal-title">Iniciá sesión para continuar</h4>
             <p class="modal-description">
@@ -100,7 +118,9 @@
     <div class="modal-backdrop" (click)="cerrarModalError()">
         <div class="modal-dialog" (click)="$event.stopPropagation()">
             <div class="modal-icon-wrapper warning-icon">
-                <svg class="icon"><use href="#i-alert"/></svg>
+                <svg class="icon">
+                    <use href="#i-alert" />
+                </svg>
             </div>
             <h4 class="modal-title">Atención</h4>
             <p class="modal-description">{{ errorMensaje() }}</p>

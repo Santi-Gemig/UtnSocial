@@ -6,3 +6,62 @@
     padding: 2rem 1.25rem 4rem;
     min-height: calc(100vh - 64px);
 }
+
+/* Modal global de aviso de sesión (10 minutos) */
+.session-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgb(9 10 20 / 0.55);
+    backdrop-filter: blur(6px);
+}
+
+.session-modal-dialog {
+    width: 100%;
+    max-width: 420px;
+    padding: 1.8rem;
+    text-align: center;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    box-shadow: var(--shadow-lg);
+    animation: fadeUp 0.22s var(--ease);
+}
+
+.session-modal-icon {
+    width: 54px;
+    height: 54px;
+    margin: 0 auto 1rem;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+}
+
+.session-modal-icon .icon {
+    width: 26px;
+    height: 26px;
+}
+
+.session-modal-title {
+    font-size: 1.2rem;
+    margin-bottom: 0.45rem;
+}
+
+.session-modal-desc {
+    color: var(--color-text-muted);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+.session-modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+}

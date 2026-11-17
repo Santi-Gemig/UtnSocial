@@ -29,51 +29,128 @@ export class AuthService {
     private http = inject(HttpClient);
     private router = inject(Router);
 
-    // URL base del backend NestJS (configurada en environment.ts como en clase 11)
+
     private readonly apiUrl = `${environment.apiUrl}/auth`;
 
-    // Signals reactivos para el estado de la sesión
+
     currentUser = signal<Usuario | null>(this.obtenerUsuarioGuardado());
     token = signal<string | null>(localStorage.getItem('token'));
 
-    // Computed: sabe si está logueado automáticamente
+
     isLoggedIn = computed(() => !!this.currentUser());
 
-    // 1. Registro
+
+    mostrarModalSesion = signal<boolean>(false);
+    extendiendoSesion = signal<boolean>(false);
+    private sesionTimer?: ReturnType<typeof setTimeout>;
+    private readonly TIEMPO_AVISO_MS = 10 * 60 * 1000;
+
+    private getAuthHeaders(): HttpHeaders {
+        return new HttpHeaders({
+            Authorization: `Bearer ${this.token() || ''}`,
+        });
+    }
+
+    // Registro
     registro(datos: any): Observable<AuthResponse> {
         return this.http.post<AuthResponse>(`${this.apiUrl}/registro`, datos).pipe(
             tap((res) => this.guardarSesion(res.token, res.usuario))
         );
     }
 
-    // 2. Login
+    //  Login
     login(credenciales: { identificador: string; password: string }): Observable<AuthResponse> {
         return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credenciales).pipe(
             tap((res) => this.guardarSesion(res.token, res.usuario))
         );
     }
 
-    // 3. Actualizar perfil propio (solo usuario logueado vía JWT)
-    actualizarPerfil(datos: FormData): Observable<{ mensaje: string; usuario: Usuario }> {
-        const headers = new HttpHeaders({
-            Authorization: `Bearer ${this.token()}`,
+    // Validar token al iniciar la app (POST /auth/autorizar)
+    autorizar(): Observable<{ mensaje: string; usuario: Usuario }> {
+        return this.http
+            .post<{ mensaje: string; usuario: Usuario }>(
+                `${this.apiUrl}/autorizar`,
+                {},
+                { headers: this.getAuthHeaders() },
+            )
+            .pipe(
+                tap((res) => {
+                    this.guardarSesion(this.token()!, res.usuario);
+                }),
+            );
+    }
+
+    //  Refrescar token por 15 minutos nuevos (POST /auth/refrescar)
+    refrescarToken(): Observable<{ mensaje: string; token: string }> {
+        return this.http
+            .post<{ mensaje: string; token: string }>(
+                `${this.apiUrl}/refrescar`,
+                {},
+                { headers: this.getAuthHeaders() },
+            )
+            .pipe(
+                tap((res) => {
+                    localStorage.setItem('token', res.token);
+                    this.token.set(res.token);
+                    this.mostrarModalSesion.set(false);
+                    this.iniciarContadorSesion();
+                }),
+            );
+    }
+
+
+    confirmarExtenderSesion(): void {
+        if (this.extendiendoSesion()) return;
+        this.extendiendoSesion.set(true);
+        this.refrescarToken().subscribe({
+            next: () => {
+                this.extendiendoSesion.set(false);
+            },
+            error: () => {
+                this.extendiendoSesion.set(false);
+                this.logout();
+            },
         });
+    }
+
+    //  Actualizar perfil propio (solo usuario logueado vía JWT)
+    actualizarPerfil(datos: FormData): Observable<{ mensaje: string; usuario: Usuario }> {
         return this.http
             .patch<{ mensaje: string; usuario: Usuario }>(
                 `${environment.apiUrl}/usuarios/mi-perfil`,
                 datos,
-                { headers },
+                { headers: this.getAuthHeaders() },
             )
             .pipe(tap((res) => this.guardarSesion(this.token()!, res.usuario)));
     }
 
-    // 4. Cerrar sesión
+    // 6. Cerrar sesión
     logout(): void {
+        this.detenerContadorSesion();
+        this.mostrarModalSesion.set(false);
         localStorage.removeItem('token');
         localStorage.removeItem('usuario');
         this.token.set(null);
         this.currentUser.set(null);
         this.router.navigate(['/login']);
+    }
+
+    // Inicia o reinicia el contador de 10 minutos
+    iniciarContadorSesion(): void {
+        this.detenerContadorSesion();
+        if (!this.token()) return;
+        this.sesionTimer = setTimeout(() => {
+            if (this.isLoggedIn()) {
+                this.mostrarModalSesion.set(true);
+            }
+        }, this.TIEMPO_AVISO_MS);
+    }
+
+    detenerContadorSesion(): void {
+        if (this.sesionTimer) {
+            clearTimeout(this.sesionTimer);
+            this.sesionTimer = undefined;
+        }
     }
 
     // Helpers internos
@@ -82,6 +159,7 @@ export class AuthService {
         localStorage.setItem('usuario', JSON.stringify(usuario));
         this.token.set(token);
         this.currentUser.set(usuario);
+        this.iniciarContadorSesion();
     }
 
     private obtenerUsuarioGuardado(): Usuario | null {

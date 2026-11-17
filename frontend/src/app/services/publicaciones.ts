@@ -29,6 +29,30 @@ export interface ListarPublicacionesResponse {
     publicaciones: PublicacionItem[];
 }
 
+export interface ComentarioItem {
+    _id: string;
+    publicacion_id: string;
+    usuario_id: {
+        _id: string;
+        nombre: string;
+        apellido: string;
+        username: string;
+        foto_perfil_url?: string;
+        perfil: string;
+    };
+    mensaje: string;
+    modificado: boolean;
+    createdAt: string;
+    updatedAt?: string;
+}
+
+export interface ListarComentariosResponse {
+    total: number;
+    limit: number;
+    offset: number;
+    comentarios: ComentarioItem[];
+}
+
 @Injectable({
     providedIn: 'root',
 })
@@ -46,7 +70,7 @@ export class PublicacionesService {
         });
     }
 
-    // 1. Listar con paginación, orden y filtro
+    //  Listar con paginación, orden y filtro
     listar(params: {
         orden?: 'fecha' | 'likes';
         usuarioId?: string;
@@ -60,7 +84,12 @@ export class PublicacionesService {
         return this.http.get<ListarPublicacionesResponse>(url);
     }
 
-    // 2. Crear nueva publicación usando FormData (multipart/form-data como en clase 11)
+    //  Obtener una publicación individual por ID (Sprint #3)
+    obtenerPorId(id: string): Observable<PublicacionItem> {
+        return this.http.get<PublicacionItem>(`${this.apiUrl}/${id}`);
+    }
+
+    //  Crear nueva publicación usando FormData (multipart/form-data como en clase 11)
     crear(datos: { titulo: string; descripcion: string; imagen?: File | null }): Observable<PublicacionItem> {
         const formData = new FormData();
         formData.append('titulo', datos.titulo);
@@ -68,11 +97,10 @@ export class PublicacionesService {
         if (datos.imagen) {
             formData.append('imagen', datos.imagen);
         }
-        // No se establece Content-Type: el navegador agrega el boundary automáticamente
         return this.http.post<PublicacionItem>(this.apiUrl, formData, { headers: this.getHeaders() });
     }
 
-    // 3. Dar "Me gusta"
+    //  Dar "Me gusta"
     darLike(id: string): Observable<{ mensaje: string; totalLikes: number }> {
         return this.http.post<{ mensaje: string; totalLikes: number }>(
             `${this.apiUrl}/${id}/like`,
@@ -81,7 +109,7 @@ export class PublicacionesService {
         );
     }
 
-    // 4. Quitar "Me gusta"
+    //  Sacar "Me gusta"
     quitarLike(id: string): Observable<{ mensaje: string; totalLikes: number }> {
         return this.http.delete<{ mensaje: string; totalLikes: number }>(
             `${this.apiUrl}/${id}/like`,
@@ -89,10 +117,46 @@ export class PublicacionesService {
         );
     }
 
-    // 5. Eliminar publicación (baja lógica)
+    // Eliminar publicación (baja lógica)
     eliminar(id: string): Observable<{ mensaje: string }> {
         return this.http.delete<{ mensaje: string }>(`${this.apiUrl}/${id}`, {
             headers: this.getHeaders(),
         });
+    }
+
+    // Listar comentarios paginados de una publicación (Sprint #3)
+    listarComentarios(
+        publicacionId: string,
+        limit = 5,
+        offset = 0,
+    ): Observable<ListarComentariosResponse> {
+        return this.http.get<ListarComentariosResponse>(
+            `${this.apiUrl}/${publicacionId}/comentarios?limit=${limit}&offset=${offset}`,
+        );
+    }
+
+    //  Crear un comentario en una publicación (Sprint #3)
+    crearComentario(
+        publicacionId: string,
+        mensaje: string,
+    ): Observable<ComentarioItem> {
+        return this.http.post<ComentarioItem>(
+            `${this.apiUrl}/${publicacionId}/comentarios`,
+            { mensaje },
+            { headers: this.getHeaders() },
+        );
+    }
+
+    // Editar un comentario propio — marca modificado: true (Sprint #3)
+    editarComentario(
+        publicacionId: string,
+        comentarioId: string,
+        mensaje: string,
+    ): Observable<ComentarioItem> {
+        return this.http.put<ComentarioItem>(
+            `${this.apiUrl}/${publicacionId}/comentarios/${comentarioId}`,
+            { mensaje },
+            { headers: this.getHeaders() },
+        );
     }
 }

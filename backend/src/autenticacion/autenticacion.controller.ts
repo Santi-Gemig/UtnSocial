@@ -4,7 +4,9 @@ import {
     HttpCode,
     HttpStatus,
     Post,
+    Req,
     UploadedFile,
+    UseGuards,
     UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -13,6 +15,7 @@ import { AutenticacionService } from './autenticacion.service';
 import { CrearUsuarioDto } from '../usuarios/dto/crear-usuario.dto';
 import { LoginDto } from './dto/login.dto';
 import { MAX_IMAGEN_BYTES } from '../publicaciones/imagenes.service';
+import { AuthGuard } from './guards/auth.guard';
 
 @Controller('auth')
 export class AutenticacionController {
@@ -40,5 +43,21 @@ export class AutenticacionController {
     @HttpCode(HttpStatus.OK)
     async login(@Body() loginDto: LoginDto) {
         return this.authService.login(loginDto);
+    }
+
+
+    @Post('autorizar')
+    @UseGuards(AuthGuard)
+    @HttpCode(HttpStatus.OK)
+    async autorizar(@Req() req: any) {
+        return this.authService.autorizar(req.user.sub);
+    }
+
+
+    @Post('refrescar')
+    @UseGuards(AuthGuard)
+    @HttpCode(HttpStatus.OK)
+    async refrescar(@Req() req: any) {
+        return this.authService.refrescar(req.user);
     }
 }

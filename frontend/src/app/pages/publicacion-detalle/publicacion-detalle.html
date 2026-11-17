@@ -1,0 +1,171 @@
+<div class="detalle-container">
+    <div class="detalle-topbar">
+        <a routerLink="/publicaciones" class="btn btn-secondary btn-back">
+            <svg class="icon">
+                <use href="#i-left" />
+            </svg>
+            Volver a publicaciones
+        </a>
+    </div>
+
+    @if (cargandoPublicacion()) {
+    <div class="card skeleton-card">
+        <div class="skeleton-row">
+            <div class="skeleton sk-avatar"></div>
+            <div style="flex:1;display:grid;gap:6px">
+                <div class="skeleton sk-line" style="width:40%"></div>
+                <div class="skeleton sk-line" style="width:25%"></div>
+            </div>
+        </div>
+        <div class="skeleton sk-line" style="width:65%;height:18px"></div>
+        <div class="skeleton sk-line"></div>
+        <div class="skeleton" style="height:220px"></div>
+    </div>
+    } @else if (errorPublicacion()) {
+    <div class="empty-state">
+        <div class="empty-icon">
+            <svg class="icon">
+                <use href="#i-alert" />
+            </svg>
+        </div>
+        <h3>{{ errorPublicacion() }}</h3>
+        <p>Es posible que la publicación haya sido eliminada.</p>
+        <a routerLink="/publicaciones" class="btn btn-primary">Ir al muro</a>
+    </div>
+    } @else if (publicacion(); as pub) {
+    <!-- 1. Publicación vista en grande -->
+    <div class="detalle-post-wrapper">
+        <app-publicacion-card [publicacion]="pub" (eliminada)="onPublicacionEliminada()"></app-publicacion-card>
+    </div>
+
+    <!-- 2. Sección de Comentarios -->
+    <section class="comentarios-section">
+        <div class="comentarios-header-card">
+            <h2>
+                <span class="feed-title-pill"></span>
+                Comentarios ({{ totalComentarios() }})
+            </h2>
+        </div>
+
+        <!-- Formulario para escribir comentario -->
+        @if (authService.isLoggedIn()) {
+        <div class="card comment-composer-card">
+            @if (errorComentario()) {
+            <div class="alert alert-danger">
+                <svg class="icon">
+                    <use href="#i-alert" />
+                </svg>
+                {{ errorComentario() }}
+            </div>
+            }
+
+            <form [formGroup]="comentarioForm" (ngSubmit)="enviarComentario()" class="comment-form">
+                <textarea formControlName="mensaje" rows="3" maxlength="300"
+                    placeholder="Escribí un comentario para esta publicación..." class="comment-textarea"></textarea>
+
+                <div class="comment-form-footer">
+                    <span class="char-badge" [class.warn]="mensajeLength >= 250 && mensajeLength < 300"
+                        [class.limit]="mensajeLength >= 300">
+                        {{ mensajeLength }} / 300
+                    </span>
+
+                    <button type="submit" class="btn btn-primary"
+                        [disabled]="enviandoComentario() || comentarioForm.invalid">
+                        <svg class="icon">
+                            <use href="#i-send" />
+                        </svg>
+                        {{ enviandoComentario() ? 'Enviando...' : 'Comentar' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+        }
+
+        <!-- Listado de Comentarios (uno debajo del otro) -->
+        @if (comentarios().length === 0 && !cargandoComentarios()) {
+        <div class="empty-state">
+            <div class="empty-icon">
+                <svg class="icon">
+                    <use href="#i-file" />
+                </svg>
+            </div>
+            <h3>Aún no hay comentarios</h3>
+            <p>Sé el primero en dejar tu opinión en esta publicación.</p>
+        </div>
+        } @else {
+        <div class="comentarios-list">
+            @for (c of comentarios(); track c._id) {
+            <article class="card comentario-card">
+                <header class="comentario-header">
+                    <div class="author-info">
+                        <div class="avatar-ring">
+                            @if (c.usuario_id?.foto_perfil_url) {
+                            <img [src]="c.usuario_id.foto_perfil_url" alt="Avatar" class="author-avatar" />
+                            } @else {
+                            <div class="author-avatar-placeholder">
+                                {{ c.usuario_id?.nombre?.charAt(0) || 'U' }}
+                            </div>
+                            }
+                        </div>
+                        <div class="author-meta">
+                            <div class="comentario-author-row">
+                                <strong class="author-name">
+                                    {{ c.usuario_id?.nombre }} {{ c.usuario_id?.apellido }}
+                                </strong>
+                                @if (c.modificado) {
+                                <span class="badge-editado">Editado</span>
+                                }
+                            </div>
+                            <span class="author-handle">
+                                &#64;{{ c.usuario_id?.username }} · {{ c.createdAt | date:'short' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    @if (esMiComentario(c) && comentarioEditandoId() !== c._id) {
+                    <button (click)="iniciarEdicion(c)" class="icon-btn" type="button" title="Editar comentario">
+                        <svg class="icon">
+                            <use href="#i-edit" />
+                        </svg>
+                    </button>
+                    }
+                </header>
+
+                @if (comentarioEditandoId() === c._id) {
+                <div class="edit-comment-box">
+                    <textarea [value]="textoEditando()" (input)="textoEditando.set($any($event.target).value)" rows="2"
+                        maxlength="300" class="comment-textarea edit-textarea"></textarea>
+                    <div class="edit-comment-actions">
+                        <span class="char-badge">{{ textoEditando().length }} / 300</span>
+                        <div class="edit-btns">
+                            <button (click)="cancelarEdicion()" class="btn btn-secondary btn-sm" type="button"
+                                [disabled]="guardandoEdicion()">
+                                Cancelar
+                            </button>
+                            <button (click)="guardarEdicion(c)" class="btn btn-primary btn-sm" type="button"
+                                [disabled]="guardandoEdicion() || !textoEditando().trim()">
+                                {{ guardandoEdicion() ? 'Guardando...' : 'Guardar' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                } @else {
+                <p class="comentario-texto">{{ c.mensaje }}</p>
+                }
+            </article>
+            }
+        </div>
+
+        <!-- Botón "Cargar más" (trae más sin borrar los anteriores) -->
+        @if (hayMasComentarios) {
+        <div class="load-more-wrap">
+            <button (click)="cargarMasComentarios()" class="btn btn-secondary btn-load-more" type="button"
+                [disabled]="cargandoComentarios()">
+                {{ cargandoComentarios() ? 'Cargando comentarios...' : 'Cargar más comentarios' }}
+            </button>
+        </div>
+        }
+        }
+    </section>
+    }
+</div>

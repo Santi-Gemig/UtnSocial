@@ -88,4 +88,37 @@ export class AutenticacionService {
             token,
         };
     }
+
+    // 3. Validar token y devolver los datos actualizados del usuario 
+    async autorizar(usuarioId: string) {
+        try {
+            const usuario = await this.usuariosService.buscarPorId(usuarioId);
+            if (!usuario || usuario.activo === false) {
+                throw new UnauthorizedException('Usuario no válido o deshabilitado');
+            }
+            return {
+                mensaje: 'Token válido',
+                usuario,
+            };
+        } catch {
+            throw new UnauthorizedException('Token inválido o usuario no encontrado');
+        }
+    }
+
+    // 4. Refrescar token por otros 15 minutos manteniendo el mismo payload 
+    async refrescar(userPayload: any) {
+        const payload = {
+            sub: userPayload.sub,
+            correo: userPayload.correo,
+            username: userPayload.username,
+            perfil: userPayload.perfil,
+        };
+
+        const token = await this.jwtService.signAsync(payload);
+
+        return {
+            mensaje: 'Token refrescado con éxito',
+            token,
+        };
+    }
 }
