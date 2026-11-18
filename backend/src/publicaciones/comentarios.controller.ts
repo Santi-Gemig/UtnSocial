@@ -21,6 +21,7 @@ export class ComentariosController {
 
 
     @Get()
+    @UseGuards(AuthGuard)
     async listar(
         @Param('publicacionId') publicacionId: string,
         @Query('limit') limit?: number,

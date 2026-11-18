@@ -155,14 +155,19 @@ export class AuthService {
             .pipe(tap((res) => this.guardarSesion(this.token()!, res.usuario)));
     }
 
-    // 6. Cerrar sesión
-    logout(): void {
+    // Limpia la sesión local sin navegar (lo usa el guard, que redirige por UrlTree)
+    cerrarSesionLocal(): void {
         this.detenerContadorSesion();
         this.mostrarModalSesion.set(false);
         localStorage.removeItem('token');
         localStorage.removeItem('usuario');
         this.token.set(null);
         this.currentUser.set(null);
+    }
+
+    // 6. Cerrar sesión
+    logout(): void {
+        this.cerrarSesionLocal();
         this.router.navigate(['/login']);
     }
 

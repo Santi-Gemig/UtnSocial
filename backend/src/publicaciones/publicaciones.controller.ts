@@ -46,8 +46,9 @@ export class PublicacionesController {
         return this.publicacionesService.crear(crearPublicacionDto, usuarioId, archivo);
     }
 
-    // Lista publicaciones (Paginación, Ordenamiento por fecha/likes, Filtro por usuario)
+    // Lista publicaciones (Requiere Login. Paginación, Ordenamiento por fecha/likes, Filtro por usuario)
     @Get()
+    @UseGuards(AuthGuard)
     async listar(
         @Query('orden') orden?: 'fecha' | 'likes',
         @Query('usuarioId') usuarioId?: string,
@@ -57,8 +58,9 @@ export class PublicacionesController {
         return this.publicacionesService.listar({ orden, usuarioId, limit, offset });
     }
 
-    // Obtener una publicación individual por ID
+    // Obtener una publicación individual por ID (Requiere Login)
     @Get(':id')
+    @UseGuards(AuthGuard)
     async obtenerPorId(@Param('id') id: string) {
         return this.publicacionesService.obtenerPorId(id);
     }
