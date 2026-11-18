@@ -64,7 +64,7 @@ export class PublicacionesService {
 
     // Helper para armar la cabecera con el token JWT
     private getHeaders(): HttpHeaders {
-        const token = this.authService.token();
+        const token = localStorage.getItem('token') || '';
         return new HttpHeaders({
             Authorization: `Bearer ${token}`,
         });

@@ -157,9 +157,9 @@
       Te quedan <strong>5 minutos</strong> de sesión activa. ¿Deseás extender tu sesión por 15 minutos más?
     </p>
     <div class="session-modal-actions">
-      <button (click)="authService.logout()" class="btn btn-secondary" type="button"
+      <button (click)="authService.cerrarModalSesion()" class="btn btn-secondary" type="button"
         [disabled]="authService.extendiendoSesion()">
-        Cerrar sesión
+        No, continuar
       </button>
       <button (click)="authService.confirmarExtenderSesion()" class="btn btn-primary" type="button"
         [disabled]="authService.extendiendoSesion()">

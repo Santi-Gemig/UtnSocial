@@ -43,12 +43,43 @@ export class AuthService {
     mostrarModalSesion = signal<boolean>(false);
     extendiendoSesion = signal<boolean>(false);
     private sesionTimer?: ReturnType<typeof setTimeout>;
-    private readonly TIEMPO_AVISO_MS = 10 * 60 * 1000;
+    private readonly CINCO_MIN_MS = 5 * 60 * 1000;
 
     private getAuthHeaders(): HttpHeaders {
+        const tokenActual = localStorage.getItem('token');
+        if (tokenActual !== this.token()) {
+            this.token.set(tokenActual);
+        }
         return new HttpHeaders({
-            Authorization: `Bearer ${this.token() || ''}`,
+            Authorization: `Bearer ${tokenActual || ''}`,
         });
+    }
+
+    private decodificarPayload(token: string): { exp?: number } | null {
+        try {
+            const partes = token.split('.');
+            if (partes.length !== 3) return null;
+            const base64 = partes[1].replace(/-/g, '+').replace(/_/g, '/');
+            const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+            return JSON.parse(atob(padded));
+        } catch {
+            return null;
+        }
+    }
+
+    estaTokenVencido(): boolean {
+        const tokenActual = localStorage.getItem('token');
+        if (tokenActual !== this.token()) {
+            this.token.set(tokenActual);
+        }
+        if (!tokenActual) return true;
+        const payload = this.decodificarPayload(tokenActual);
+        if (!payload || typeof payload.exp !== 'number') return true;
+        return Date.now() >= payload.exp * 1000;
+    }
+
+    cerrarModalSesion(): void {
+        this.mostrarModalSesion.set(false);
     }
 
     // Registro
@@ -135,15 +166,26 @@ export class AuthService {
         this.router.navigate(['/login']);
     }
 
-    // Inicia o reinicia el contador de 10 minutos
+    // Inicia o reinicia el contador según la expiración real del JWT (avisa 5 min antes)
     iniciarContadorSesion(): void {
         this.detenerContadorSesion();
-        if (!this.token()) return;
-        this.sesionTimer = setTimeout(() => {
-            if (this.isLoggedIn()) {
-                this.mostrarModalSesion.set(true);
-            }
-        }, this.TIEMPO_AVISO_MS);
+        const tokenActual = localStorage.getItem('token');
+        if (!tokenActual) return;
+
+        const payload = this.decodificarPayload(tokenActual);
+        if (!payload || typeof payload.exp !== 'number') return;
+
+        const tiempoRestanteMs = payload.exp * 1000 - Date.now();
+        if (tiempoRestanteMs <= 0) return;
+
+        if (tiempoRestanteMs > this.CINCO_MIN_MS) {
+            const esperaMs = tiempoRestanteMs - this.CINCO_MIN_MS;
+            this.sesionTimer = setTimeout(() => {
+                if (this.isLoggedIn() && !this.estaTokenVencido()) {
+                    this.mostrarModalSesion.set(true);
+                }
+            }, esperaMs);
+        }
     }
 
     detenerContadorSesion(): void {

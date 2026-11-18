@@ -122,6 +122,10 @@ export class Publicaciones implements OnInit {
   }
 
   crearPublicacion(): void {
+    if (this.authService.estaTokenVencido()) {
+      this.authService.logout();
+      return;
+    }
     if (this.postForm.invalid) return;
 
     this.publicando.set(true);
@@ -146,6 +150,7 @@ export class Publicaciones implements OnInit {
         },
         error: (err) => {
           this.publicando.set(false);
+          if (err.status === 401) return;
           const msg = err.error?.message || 'Error al crear la publicación';
           this.mensajeError.set(Array.isArray(msg) ? msg.join(', ') : msg);
         },

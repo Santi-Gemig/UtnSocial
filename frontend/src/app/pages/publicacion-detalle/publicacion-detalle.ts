@@ -112,6 +112,10 @@ export class PublicacionDetalle implements OnInit {
     }
 
     enviarComentario(): void {
+        if (this.authService.estaTokenVencido()) {
+            this.authService.logout();
+            return;
+        }
         const pub = this.publicacion();
         if (!pub || this.comentarioForm.invalid || this.enviandoComentario()) return;
 
@@ -129,6 +133,7 @@ export class PublicacionDetalle implements OnInit {
             },
             error: (err) => {
                 this.enviandoComentario.set(false);
+                if (err.status === 401) return;
                 const msg = err.error?.message || 'Error al publicar el comentario';
                 this.errorComentario.set(Array.isArray(msg) ? msg.join(', ') : msg);
             },
@@ -152,6 +157,10 @@ export class PublicacionDetalle implements OnInit {
     }
 
     guardarEdicion(comentario: ComentarioItem): void {
+        if (this.authService.estaTokenVencido()) {
+            this.authService.logout();
+            return;
+        }
         const pub = this.publicacion();
         const nuevoTexto = this.textoEditando().trim();
         if (!pub || !nuevoTexto || nuevoTexto.length > 300 || this.guardandoEdicion()) return;
@@ -169,6 +178,7 @@ export class PublicacionDetalle implements OnInit {
                 },
                 error: (err) => {
                     this.guardandoEdicion.set(false);
+                    if (err.status === 401) return;
                     const msg = err.error?.message || 'Error al editar el comentario';
                     this.errorComentario.set(Array.isArray(msg) ? msg.join(', ') : msg);
                 },

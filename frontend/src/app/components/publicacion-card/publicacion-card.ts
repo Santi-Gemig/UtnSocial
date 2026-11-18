@@ -60,8 +60,8 @@ export class PublicacionCard implements OnInit, OnChanges {
 
   // Toggle de Like en vivo con actualización optimista y animación burst
   toggleLike(): void {
-    if (!this.authService.isLoggedIn()) {
-      this.mostrarModalLogin.set(true);
+    if (!this.authService.isLoggedIn() || this.authService.estaTokenVencido()) {
+      this.authService.logout();
       return;
     }
     if (this.cargandoLike()) return;
@@ -96,6 +96,10 @@ export class PublicacionCard implements OnInit, OnChanges {
           this.publicacion.likes = likesPrevios;
           this.sincronizarLikes();
           this.cargandoLike.set(false);
+          if (err.status === 401 || this.authService.estaTokenVencido()) {
+            this.authService.logout();
+            return;
+          }
           this.errorMensaje.set(err.error?.message || 'Error al quitar me gusta');
         },
       });
@@ -115,6 +119,10 @@ export class PublicacionCard implements OnInit, OnChanges {
           this.sincronizarLikes();
           this.animandoLike.set(false);
           this.cargandoLike.set(false);
+          if (err.status === 401 || this.authService.estaTokenVencido()) {
+            this.authService.logout();
+            return;
+          }
           this.errorMensaje.set(err.error?.message || 'Error al dar me gusta');
         },
       });
@@ -142,6 +150,10 @@ export class PublicacionCard implements OnInit, OnChanges {
       error: (err) => {
         this.eliminando.set(false);
         this.mostrarModalEliminar.set(false);
+        if (err.status === 401 || this.authService.estaTokenVencido()) {
+          this.authService.logout();
+          return;
+        }
         this.errorMensaje.set(err.error?.message || 'Error al eliminar la publicación');
       },
     });
