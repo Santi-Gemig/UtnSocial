@@ -82,7 +82,14 @@
         }
 
         <!-- Listado de Comentarios (uno debajo del otro) -->
-        @if (comentarios().length === 0 && !cargandoComentarios()) {
+        @if (errorCargaComentarios()) {
+        <div class="alert alert-danger">
+            <svg class="icon">
+                <use href="#i-alert" />
+            </svg>
+            {{ errorCargaComentarios() }}
+        </div>
+        } @else if (comentarios().length === 0 && !cargandoComentarios()) {
         <div class="empty-state">
             <div class="empty-icon">
                 <svg class="icon">

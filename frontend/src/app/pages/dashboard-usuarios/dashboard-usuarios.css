@@ -1,0 +1,333 @@
+.dash-container {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.dash-header {
+    padding: 1.35rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.dash-title {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-size: 1.4rem;
+}
+
+.dash-subtitle {
+    margin-top: 0.25rem;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+.dash-counter {
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-full);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    font-weight: 700;
+    font-size: 0.84rem;
+}
+
+.dash-grid {
+    display: grid;
+    grid-template-columns: minmax(320px, 440px) 1fr;
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.form-card,
+.list-card {
+    padding: 1.35rem;
+}
+
+.section-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.08rem;
+    margin-bottom: 1rem;
+}
+
+.dash-form {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.form-group {
+    display: grid;
+    gap: 0.3rem;
+}
+
+.form-group label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text-2);
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.58rem 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border-strong);
+    background: rgb(255 255 255 / 0.88);
+    font-size: 0.88rem;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--brand-indigo);
+    box-shadow: 0 0 0 3px var(--color-primary-ring);
+}
+
+.error-text {
+    color: var(--color-danger);
+    font-size: 0.76rem;
+    font-weight: 500;
+}
+
+.alert-success {
+    background: var(--color-success-soft);
+    color: #166534;
+    border: 1px solid rgb(22 101 52 / 0.25);
+}
+
+.radio-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.radio-card {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border-strong);
+    background: rgb(255 255 255 / 0.85);
+    cursor: pointer;
+    font-size: 0.84rem;
+    font-weight: 600;
+}
+
+.radio-card input {
+    width: auto;
+    margin: 0;
+    accent-color: var(--color-primary);
+}
+
+.radio-card.selected {
+    border-color: var(--brand-indigo);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+}
+
+.photo-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.btn-file {
+    font-size: 0.83rem;
+    padding: 0.5rem 0.85rem;
+}
+
+.preview-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.preview-img {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--brand-indigo);
+}
+
+.users-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.user-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+    padding: 0.85rem 1rem;
+    border-radius: var(--radius-md);
+    background: rgb(255 255 255 / 0.75);
+    border: 1px solid var(--color-border);
+    transition: border-color var(--t-fast);
+}
+
+.user-item.user-disabled {
+    opacity: 0.72;
+    background: rgb(248 250 252 / 0.65);
+}
+
+.user-left {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    min-width: 0;
+}
+
+.user-meta {
+    display: grid;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.user-top {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.user-sub,
+.user-date {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    overflow-wrap: anywhere;
+}
+
+.badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-full);
+    background: var(--color-surface-2);
+    color: var(--color-text-2);
+}
+
+.badge-admin {
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+}
+
+.badge-ok {
+    background: var(--color-success-soft);
+    color: #166534;
+}
+
+.badge-off {
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
+}
+
+.btn-sm {
+    padding: 0.45rem 0.8rem;
+    font-size: 0.8rem;
+}
+
+.self-tag {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    padding: 0.3rem 0.6rem;
+    border-radius: var(--radius-full);
+    background: var(--color-surface-2);
+}
+
+@media (max-width: 920px) {
+    .dash-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 560px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .user-item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .user-actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgb(9 10 20 / 0.55);
+    backdrop-filter: blur(6px);
+}
+
+.modal-dialog {
+    width: 100%;
+    max-width: 400px;
+    padding: 1.75rem;
+    text-align: center;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-icon-wrapper {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 1rem;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+}
+
+.modal-icon-wrapper .icon {
+    width: 24px;
+    height: 24px;
+}
+
+.modal-icon-wrapper.danger-icon {
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
+}
+
+.modal-title {
+    font-size: 1.15rem;
+    color: var(--color-text);
+    margin-bottom: 0.4rem;
+}
+
+.modal-description {
+    color: var(--color-text-muted);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+.modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+}

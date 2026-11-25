@@ -2,9 +2,10 @@ import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth';
+import { AutoFocusDirective } from '../../directives/auto-focus.directive';
 
 @Component({
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, AutoFocusDirective],
   selector: 'app-login',
   styleUrl: './login.css',
   templateUrl: './login.html',

@@ -5,10 +5,11 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService, Usuario } from '../../services/auth';
 import { PublicacionCard } from '../../components/publicacion-card/publicacion-card';
 import { PublicacionItem, PublicacionesService } from '../../services/publicaciones';
+import { RolEtiquetaPipe } from '../../pipes/rol-etiqueta.pipe';
 
 @Component({
   selector: 'app-mi-perfil',
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, PublicacionCard],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, PublicacionCard, RolEtiquetaPipe],
   templateUrl: './mi-perfil.html',
   styleUrl: './mi-perfil.css',
 })
@@ -20,6 +21,7 @@ export class MiPerfil implements OnInit {
   usuario = signal<Usuario | null>(null);
   ultimasPublicaciones = signal<PublicacionItem[]>([]);
   cargando = signal<boolean>(true);
+  errorPublicaciones = signal<string | null>(null);
 
   // Estado y formulario para el modal de Edición de Perfil
   mostrarModalEditar = signal<boolean>(false);
@@ -71,6 +73,7 @@ export class MiPerfil implements OnInit {
     if (!user || !user._id) return;
 
     this.cargando.set(true);
+    this.errorPublicaciones.set(null);
     this.publicacionesService
       .listar({
         usuarioId: user._id,
@@ -83,8 +86,10 @@ export class MiPerfil implements OnInit {
           this.cargando.set(false);
         },
         error: (err) => {
-          console.error('Error al cargar publicaciones del perfil', err);
           this.cargando.set(false);
+          if (err.status === 401) return;
+          const msg = err.error?.message || 'Error al cargar tus últimas publicaciones';
+          this.errorPublicaciones.set(Array.isArray(msg) ? msg.join(', ') : msg);
         },
       });
   }

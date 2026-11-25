@@ -1,4 +1,4 @@
-<article class="card post-card">
+<article class="card post-card" appResaltarCard>
     <!-- Cabecera del post (autor, fecha y botón borrar) -->
     <header class="post-header">
         <div class="author-info">
@@ -16,7 +16,7 @@
                     {{ publicacion.usuario_id?.nombre }} {{ publicacion.usuario_id?.apellido }}
                 </strong>
                 <span class="author-handle">@{{ publicacion.usuario_id?.username }} · {{ publicacion.createdAt |
-                    date:'short' }}</span>
+                    tiempoRelativo }}</span>
             </div>
         </div>
 
@@ -88,32 +88,7 @@
     </div>
     }
 
-    <!-- MODAL 2: Invitación a Iniciar Sesión para Invitados (Reemplaza alert()) -->
-    @if (mostrarModalLogin()) {
-    <div class="modal-backdrop" (click)="cerrarModalLogin()">
-        <div class="modal-dialog" (click)="$event.stopPropagation()">
-            <div class="modal-icon-wrapper auth-icon">
-                <svg class="icon">
-                    <use href="#i-lock" />
-                </svg>
-            </div>
-            <h4 class="modal-title">Iniciá sesión para continuar</h4>
-            <p class="modal-description">
-                Debes tener una cuenta iniciada para poder dar "Me gusta" e interactuar en la red.
-            </p>
-            <div class="modal-actions">
-                <button (click)="cerrarModalLogin()" class="btn btn-secondary btn-modal-cancel" type="button">
-                    Cerrar
-                </button>
-                <a routerLink="/login" class="btn btn-primary btn-modal-primary">
-                    Iniciar Sesión
-                </a>
-            </div>
-        </div>
-    </div>
-    }
-
-    <!-- MODAL 3: Aviso de Error (Reemplaza alert()) -->
+    <!-- MODAL 2: Aviso de Error (Reemplaza alert()) -->
     @if (errorMensaje()) {
     <div class="modal-backdrop" (click)="cerrarModalError()">
         <div class="modal-dialog" (click)="$event.stopPropagation()">

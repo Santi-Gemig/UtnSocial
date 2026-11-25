@@ -24,3 +24,4 @@ export class Comentario {
 }
 
 export const ComentarioSchema = SchemaFactory.createForClass(Comentario);
+ComentarioSchema.index({ publicacion_id: 1, activo: 1, createdAt: -1 });

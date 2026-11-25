@@ -14,18 +14,25 @@ export class UsuariosService {
         private readonly imagenes: ImagenesService,
     ) { }
 
-    // 1. Crear nuevo usuario (Registro)
+    private escaparRegex(texto: string): string {
+        return texto.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    //  Crear nuevo usuario (Registro)
     async crear(crearUsuarioDto: CrearUsuarioDto): Promise<Usuario> {
         const { correo, username, password } = crearUsuarioDto;
+        const usernameLimpio = username.trim();
 
         // Verificar si ya existe el correo
-        const existeCorreo = await this.usuarioModel.findOne({ correo: correo.toLowerCase() });
+        const existeCorreo = await this.usuarioModel.findOne({ correo: correo.trim().toLowerCase() });
         if (existeCorreo) {
             throw new BadRequestException('El correo electrónico ya está registrado');
         }
 
-        // Verificar si ya existe el nombre de usuario
-        const existeUsername = await this.usuarioModel.findOne({ username });
+        // Verificar si ya existe el nombre de usuario (case-insensitive)
+        const existeUsername = await this.usuarioModel.findOne({
+            username: new RegExp(`^${this.escaparRegex(usernameLimpio)}$`, 'i'),
+        });
         if (existeUsername) {
             throw new BadRequestException('El nombre de usuario ya está en uso');
         }
@@ -37,7 +44,10 @@ export class UsuariosService {
         // Crear el documento en MongoDB
         const nuevoUsuario = new this.usuarioModel({
             ...crearUsuarioDto,
-            correo: correo.toLowerCase(),
+            nombre: crearUsuarioDto.nombre.trim(),
+            apellido: crearUsuarioDto.apellido.trim(),
+            correo: correo.trim().toLowerCase(),
+            username: usernameLimpio,
             password: passwordHash,
             perfil: crearUsuarioDto.perfil || 'usuario', // Por defecto es usuario
         });
@@ -45,19 +55,21 @@ export class UsuariosService {
         return nuevoUsuario.save();
     }
 
-    // 2. Buscar por correo o username (usado en el Login)
+    //  Buscar por correo o username (usado en el Login)
     async buscarPorLogin(identificador: string): Promise<UsuarioDocument | null> {
+        const limpio = identificador.trim();
+        if (!limpio) return null;
         return this.usuarioModel
             .findOne({
                 $or: [
-                    { correo: identificador.toLowerCase() },
-                    { username: identificador },
+                    { correo: limpio.toLowerCase() },
+                    { username: new RegExp(`^${this.escaparRegex(limpio)}$`, 'i') },
                 ],
             })
             .exec();
     }
 
-    // 3. Buscar por ID (usado en "Mi Perfil")
+    //  Buscar por ID (usado en "Mi Perfil")
     async buscarPorId(id: string): Promise<UsuarioDocument> {
         if (!isObjectIdOrHexString(id)) {
             throw new BadRequestException('ID de usuario inválido');
@@ -69,7 +81,7 @@ export class UsuariosService {
         return usuario;
     }
 
-    // 4. Actualizar perfil propio (solo dueño autenticado por JWT)
+    //  Actualizar perfil propio (solo dueño autenticado por JWT)
     async actualizarPerfil(
         id: string,
         dto: ActualizarUsuarioDto,
@@ -79,11 +91,14 @@ export class UsuariosService {
             throw new BadRequestException('ID de usuario inválido');
         }
 
-        // Si quiere cambiar el @username, verificamos que ningún otro usuario lo tenga tomado
+        // Si quiere cambiar el @username, verificamos que ningún otro usuario lo tenga tomado (case-insensitive)
         if (dto.username !== undefined) {
             const usernameLimpio = dto.username.trim();
             const existeOtro = await this.usuarioModel
-                .findOne({ username: usernameLimpio, _id: { $ne: id } })
+                .findOne({
+                    username: new RegExp(`^${this.escaparRegex(usernameLimpio)}$`, 'i'),
+                    _id: { $ne: id },
+                })
                 .exec();
             if (existeOtro) {
                 throw new BadRequestException('El nombre de usuario ya está en uso');
@@ -130,5 +145,80 @@ export class UsuariosService {
             }
             throw error;
         }
+    }
+    //  Listar todos los usuarios (Solo Admin)
+    async listarTodos() {
+        return this.usuarioModel
+            .find()
+            .select('-password')
+            .sort({ createdAt: -1 })
+            .exec();
+    }
+    //  Crear usuario desde el dashboard admin (permite elegir perfil y foto opcional)
+    async crearDesdeAdmin(
+        crearUsuarioDto: CrearUsuarioDto,
+        archivo?: Express.Multer.File,
+    ) {
+        let publicId: string | undefined;
+        crearUsuarioDto.foto_perfil_url = '';
+        if (archivo) {
+            const buffer = await this.imagenes.normalizar(archivo);
+            const subida = await this.imagenes.subir(buffer, 'red-social/perfiles');
+            crearUsuarioDto.foto_perfil_url = subida.url;
+            publicId = subida.publicId;
+        }
+        try {
+            const usuario = await this.crear(crearUsuarioDto);
+            const usuarioObj = (usuario as any).toObject
+                ? (usuario as any).toObject()
+                : { ...usuario };
+            delete usuarioObj.password;
+            return {
+                mensaje: 'Usuario creado con éxito',
+                usuario: usuarioObj,
+            };
+        } catch (error) {
+            if (publicId) {
+                await this.imagenes.eliminar(publicId);
+            }
+            throw error;
+        }
+    }
+    // Baja lógica: deshabilitar usuario (DELETE)
+    async deshabilitar(id: string, adminId: string) {
+        if (!isObjectIdOrHexString(id)) {
+            throw new BadRequestException('ID de usuario inválido');
+        }
+        if (id === adminId) {
+            throw new BadRequestException('No podés deshabilitar tu propio usuario');
+        }
+        const usuario = await this.usuarioModel
+            .findByIdAndUpdate(id, { $set: { activo: false } }, { new: true })
+            .select('-password')
+            .exec();
+        if (!usuario) {
+            throw new NotFoundException('Usuario no encontrado');
+        }
+        return {
+            mensaje: 'Usuario deshabilitado correctamente',
+            usuario,
+        };
+    }
+    // Alta lógica: rehabilitar usuario previamente deshabilitado (POST)
+    async rehabilitar(id: string) {
+        if (!isObjectIdOrHexString(id)) {
+            throw new BadRequestException('ID de usuario inválido');
+        }
+        const usuario = await this.usuarioModel
+            .findByIdAndUpdate(id, { $set: { activo: true } }, { new: true })
+            .select('-password')
+            .exec();
+        if (!usuario) {
+            throw new NotFoundException('Usuario no encontrado');
+        }
+        return {
+            mensaje: 'Usuario rehabilitado correctamente',
+            usuario,
+        };
     }
 }

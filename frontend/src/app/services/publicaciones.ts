@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AuthService } from './auth';
 import { environment } from '../../environments/environment';
 
 export interface PublicacionItem {
@@ -58,17 +57,8 @@ export interface ListarComentariosResponse {
 })
 export class PublicacionesService {
     private http = inject(HttpClient);
-    private authService = inject(AuthService);
 
     private readonly apiUrl = `${environment.apiUrl}/publicaciones`;
-
-    // Helper para armar la cabecera con el token JWT
-    private getHeaders(): HttpHeaders {
-        const token = localStorage.getItem('token') || '';
-        return new HttpHeaders({
-            Authorization: `Bearer ${token}`,
-        });
-    }
 
     //  Listar con paginación, orden y filtro
     listar(params: {
@@ -97,7 +87,7 @@ export class PublicacionesService {
         if (datos.imagen) {
             formData.append('imagen', datos.imagen);
         }
-        return this.http.post<PublicacionItem>(this.apiUrl, formData, { headers: this.getHeaders() });
+        return this.http.post<PublicacionItem>(this.apiUrl, formData);
     }
 
     //  Dar "Me gusta"
@@ -105,7 +95,6 @@ export class PublicacionesService {
         return this.http.post<{ mensaje: string; totalLikes: number }>(
             `${this.apiUrl}/${id}/like`,
             {},
-            { headers: this.getHeaders() }
         );
     }
 
@@ -113,15 +102,12 @@ export class PublicacionesService {
     quitarLike(id: string): Observable<{ mensaje: string; totalLikes: number }> {
         return this.http.delete<{ mensaje: string; totalLikes: number }>(
             `${this.apiUrl}/${id}/like`,
-            { headers: this.getHeaders() }
         );
     }
 
     // Eliminar publicación (baja lógica)
     eliminar(id: string): Observable<{ mensaje: string }> {
-        return this.http.delete<{ mensaje: string }>(`${this.apiUrl}/${id}`, {
-            headers: this.getHeaders(),
-        });
+        return this.http.delete<{ mensaje: string }>(`${this.apiUrl}/${id}`);
     }
 
     // Listar comentarios paginados de una publicación (Sprint #3)
@@ -143,7 +129,6 @@ export class PublicacionesService {
         return this.http.post<ComentarioItem>(
             `${this.apiUrl}/${publicacionId}/comentarios`,
             { mensaje },
-            { headers: this.getHeaders() },
         );
     }
 
@@ -156,7 +141,6 @@ export class PublicacionesService {
         return this.http.put<ComentarioItem>(
             `${this.apiUrl}/${publicacionId}/comentarios/${comentarioId}`,
             { mensaje },
-            { headers: this.getHeaders() },
         );
     }
 }

@@ -18,8 +18,26 @@ function configurarApp(app: any) {
     }),
   );
 
+  const origenesExtra = (process.env.FRONTEND_ORIGIN || '')
+    .split(',')
+    .map((o) => o.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+  const origenesPermitidos = new Set([
+    'http://localhost:4200',
+    'https://utn-social-cwtq.vercel.app',
+    ...origenesExtra,
+  ]);
+
   app.enableCors({
-    origin: true,
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      if (!origin || origenesPermitidos.has(origin.replace(/\/$/, ''))) {
+        return callback(null, true);
+      }
+      return callback(new Error('Origen no permitido por CORS'), false);
+    },
     credentials: true,
   });
 }

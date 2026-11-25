@@ -15,7 +15,7 @@ if (existsSync('.env')) loadEnvFile('.env');
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET || 'secreto_super_seguro_utn_red_social',
-      signOptions: { expiresIn: '15m' },
+      signOptions: { expiresIn: '3m' },
     }),
   ],
   controllers: [AutenticacionController],

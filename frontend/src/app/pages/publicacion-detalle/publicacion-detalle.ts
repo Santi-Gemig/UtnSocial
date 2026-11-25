@@ -32,6 +32,7 @@ export class PublicacionDetalle implements OnInit {
     cargandoComentarios = signal<boolean>(false);
     enviandoComentario = signal<boolean>(false);
     errorComentario = signal<string | null>(null);
+    errorCargaComentarios = signal<string | null>(null);
     readonly limitComentarios = 5;
 
     // Edición de comentario propio
@@ -82,6 +83,7 @@ export class PublicacionDetalle implements OnInit {
     // Si acumular es true (botón "Cargar más"), agrega debajo sin borrar los anteriores
     cargarComentarios(publicacionId: string, acumular: boolean): void {
         this.cargandoComentarios.set(true);
+        this.errorCargaComentarios.set(null);
         const offsetActual = acumular ? this.comentarios().length : 0;
 
         this.publicacionesService
@@ -99,8 +101,11 @@ export class PublicacionDetalle implements OnInit {
                     this.totalComentarios.set(res.total);
                     this.cargandoComentarios.set(false);
                 },
-                error: () => {
+                error: (err) => {
                     this.cargandoComentarios.set(false);
+                    if (err.status === 401) return;
+                    const msg = err.error?.message || 'No se pudieron cargar los comentarios.';
+                    this.errorCargaComentarios.set(Array.isArray(msg) ? msg.join(', ') : msg);
                 },
             });
     }

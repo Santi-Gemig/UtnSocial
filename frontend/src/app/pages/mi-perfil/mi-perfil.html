@@ -14,7 +14,9 @@
                     }
 
                     <button (click)="abrirModalEditar()" class="btn btn-primary btn-edit-profile" type="button">
-                        <svg class="icon"><use href="#i-edit"/></svg>
+                        <svg class="icon">
+                            <use href="#i-edit" />
+                        </svg>
                         Editar perfil
                     </button>
                 </div>
@@ -23,13 +25,10 @@
                     <div class="name-badge-row">
                         <h1 class="user-fullname">{{ u.nombre }} {{ u.apellido }}</h1>
                         <span class="role-badge" [class.badge-admin]="u.perfil === 'administrador'">
-                            @if (u.perfil === 'administrador') {
-                            <svg class="icon"><use href="#i-shield"/></svg>
-                            Administrador
-                            } @else {
-                            <svg class="icon"><use href="#i-user"/></svg>
-                            Usuario
-                            }
+                            <svg class="icon">
+                                <use [attr.href]="u.perfil === 'administrador' ? '#i-shield' : '#i-user'" />
+                            </svg>
+                            {{ u.perfil | rolEtiqueta }}
                         </span>
                     </div>
                     <p class="user-handle">@{{ u.username }}</p>
@@ -40,7 +39,9 @@
                 <div class="perfil-details-grid">
                     <div class="detail-item">
                         <span class="detail-icon">
-                            <svg class="icon"><use href="#i-mail"/></svg>
+                            <svg class="icon">
+                                <use href="#i-mail" />
+                            </svg>
                         </span>
                         <span class="detail-text">
                             <span class="detail-label">Correo electrónico</span>
@@ -49,7 +50,9 @@
                     </div>
                     <div class="detail-item">
                         <span class="detail-icon">
-                            <svg class="icon"><use href="#i-calendar"/></svg>
+                            <svg class="icon">
+                                <use href="#i-calendar" />
+                            </svg>
                         </span>
                         <span class="detail-text">
                             <span class="detail-label">Fecha de nacimiento</span>
@@ -72,7 +75,9 @@
                 <p class="section-subtitle">Tus 3 posteos más recientes</p>
             </div>
             <a routerLink="/publicaciones" class="btn btn-primary btn-nueva-pub">
-                <svg class="icon"><use href="#i-plus"/></svg>
+                <svg class="icon">
+                    <use href="#i-plus" />
+                </svg>
                 Crear nueva
             </a>
         </div>
@@ -102,10 +107,17 @@
                 <div class="skeleton sk-line" style="width:80%"></div>
             </div>
         </div>
+        } @else if (errorPublicaciones()) {
+        <div class="alert alert-danger">
+            <svg class="icon"><use href="#i-alert"/></svg>
+            {{ errorPublicaciones() }}
+        </div>
         } @else if (ultimasPublicaciones().length === 0) {
         <div class="empty-state">
             <div class="empty-icon">
-                <svg class="icon"><use href="#i-file"/></svg>
+                <svg class="icon">
+                    <use href="#i-file" />
+                </svg>
             </div>
             <h3>Todavía no hiciste publicaciones</h3>
             <p>Comparte tus ideas, novedades o imágenes con el resto de la comunidad.</p>
@@ -114,7 +126,8 @@
         } @else {
         <div class="posts-list">
             @for (post of ultimasPublicaciones(); track post._id) {
-            <app-publicacion-card [publicacion]="post" (eliminada)="onPublicacionEliminada($event)"></app-publicacion-card>
+            <app-publicacion-card [publicacion]="post"
+                (eliminada)="onPublicacionEliminada($event)"></app-publicacion-card>
             }
         </div>
         }
@@ -127,7 +140,9 @@
             <div class="modal-edit-header">
                 <h3>Editar perfil</h3>
                 <button (click)="cerrarModalEditar()" class="icon-btn" type="button" [disabled]="guardandoPerfil()">
-                    <svg class="icon"><use href="#i-x"/></svg>
+                    <svg class="icon">
+                        <use href="#i-x" />
+                    </svg>
                 </button>
             </div>
 
@@ -135,7 +150,9 @@
                 <div class="modal-edit-body">
                     @if (errorEditar()) {
                     <div class="alert alert-danger" style="margin-bottom:0">
-                        <svg class="icon"><use href="#i-alert"/></svg>
+                        <svg class="icon">
+                            <use href="#i-alert" />
+                        </svg>
                         {{ errorEditar() }}
                     </div>
                     }
@@ -153,7 +170,9 @@
                             <strong>Foto de perfil</strong>
                             <div class="edit-avatar-btns">
                                 <label class="btn btn-secondary btn-compact">
-                                    <svg class="icon" style="width:15px;height:15px"><use href="#i-image"/></svg>
+                                    <svg class="icon" style="width:15px;height:15px">
+                                        <use href="#i-image" />
+                                    </svg>
                                     Cambiar foto
                                     <input type="file" (change)="onFotoPerfilSelected($event)"
                                         accept="image/jpeg,image/png,image/webp" class="hidden-file-input" />
@@ -214,7 +233,8 @@
                 </div>
 
                 <div class="modal-edit-footer">
-                    <button (click)="cerrarModalEditar()" class="btn btn-secondary" type="button" [disabled]="guardandoPerfil()">
+                    <button (click)="cerrarModalEditar()" class="btn btn-secondary" type="button"
+                        [disabled]="guardandoPerfil()">
                         Cancelar
                     </button>
                     <button type="submit" class="btn btn-primary" [disabled]="guardandoPerfil() || editarForm.invalid">

@@ -5,7 +5,10 @@ import { Publicaciones } from './pages/publicaciones/publicaciones';
 import { PublicacionDetalle } from './pages/publicacion-detalle/publicacion-detalle';
 import { MiPerfil } from './pages/mi-perfil/mi-perfil';
 import { Cargando } from './pages/cargando/cargando';
+import { DashboardUsuarios } from './pages/dashboard-usuarios/dashboard-usuarios';
+import { DashboardEstadisticas } from './pages/dashboard-estadisticas/dashboard-estadisticas';
 import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
     { path: '', redirectTo: 'cargando', pathMatch: 'full' },
@@ -16,5 +19,8 @@ export const routes: Routes = [
     { path: 'publicaciones', component: Publicaciones, canActivate: [authGuard] },
     { path: 'publicaciones/:id', component: PublicacionDetalle, canActivate: [authGuard] },
     { path: 'mi-perfil', component: MiPerfil, canActivate: [authGuard] },
+    // Rutas exclusivas de Administrador
+    { path: 'dashboard/estadisticas', component: DashboardEstadisticas, canActivate: [adminGuard] },
+    { path: 'dashboard/usuarios', component: DashboardUsuarios, canActivate: [adminGuard] },
     { path: '**', redirectTo: 'publicaciones' },
 ];

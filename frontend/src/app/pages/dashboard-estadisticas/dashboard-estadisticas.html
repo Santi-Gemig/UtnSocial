@@ -1,0 +1,211 @@
+<div class="stats-container">
+    <!-- Encabezado y Selector de Lapso de Tiempo -->
+    <header class="card stats-header">
+        <div class="stats-title-block">
+            <h1 class="stats-title">
+                <span class="feed-title-pill"></span>
+                Estadísticas de Actividad
+            </h1>
+            <p class="stats-subtitle">Métricas dinámicas filtradas por rango de fechas.</p>
+        </div>
+
+        <div class="filter-bar">
+            <div class="preset-buttons">
+                <button type="button" (click)="aplicarPreset(7)" class="btn btn-secondary btn-xs">7 días</button>
+                <button type="button" (click)="aplicarPreset(30)" class="btn btn-secondary btn-xs">30 días</button>
+                <button type="button" (click)="aplicarPreset(365)" class="btn btn-secondary btn-xs">1 año</button>
+            </div>
+
+            <div class="date-inputs">
+                <label class="date-field">
+                    <span>Desde</span>
+                    <input type="date" [ngModel]="desde()" (ngModelChange)="desde.set($event)" />
+                </label>
+                <label class="date-field">
+                    <span>Hasta</span>
+                    <input type="date" [ngModel]="hasta()" (ngModelChange)="hasta.set($event)" />
+                </label>
+                <button type="button" (click)="cargarEstadisticas()" class="btn btn-primary btn-filter"
+                    [disabled]="cargando()">
+                    {{ cargando() ? 'Cargando...' : 'Filtrar' }}
+                </button>
+            </div>
+        </div>
+    </header>
+
+    @if (errorMensaje()) {
+    <div class="alert alert-danger">
+        <svg class="icon">
+            <use href="#i-alert" />
+        </svg>
+        {{ errorMensaje() }}
+    </div>
+    }
+
+    @if (cargando()) {
+    <div class="charts-grid">
+        @for (i of [1, 2, 3]; track i) {
+        <div class="card skeleton-card" [class.span-full]="i === 3">
+            <div class="skeleton sk-line" style="width:45%;height:16px"></div>
+            <div class="skeleton" style="height:210px"></div>
+        </div>
+        }
+    </div>
+    } @else {
+    <div class="charts-grid">
+        <!-- GRÁFICO 1: BARRAS — Publicaciones por usuario -->
+        <section class="card chart-card" appResaltarCard>
+            <div class="chart-head">
+                <div>
+                    <span class="chart-type-badge">Gráfico de Barras</span>
+                    <h2>Publicaciones por usuario</h2>
+                </div>
+                <span class="chart-kpi">{{ barrasData().length }} autores</span>
+            </div>
+
+            @if (barrasData().length === 0) {
+            <div class="empty-chart">Sin publicaciones en el lapso seleccionado.</div>
+            } @else {
+            <div class="bars-stage">
+                @for (b of barrasData(); track b.usuarioId) {
+                <div class="bar-col" [title]="b.nombre + ': ' + b.cantidad + ' publicaciones'">
+                    <span class="bar-value">{{ b.cantidad }}</span>
+                    <div class="bar-track">
+                        <div class="bar-fill" [style.height.%]="b.porcentajeAltura"></div>
+                    </div>
+                    <span class="bar-label">&#64;{{ b.username }}</span>
+                </div>
+                }
+            </div>
+            }
+        </section>
+
+        <!-- GRÁFICO 2: LÍNEAS (SVG) — Comentarios realizados en el lapso -->
+        <section class="card chart-card" appResaltarCard>
+            <div class="chart-head">
+                <div>
+                    <span class="chart-type-badge">Gráfico de Líneas</span>
+                    <h2>Comentarios en el tiempo</h2>
+                </div>
+                <span class="chart-kpi">{{ totalComentariosPeriodo() }} en total</span>
+            </div>
+
+            @if (lineasData().puntos.length === 0) {
+            <div class="empty-chart">Sin comentarios en el lapso seleccionado.</div>
+            } @else {
+            @let ld = lineasData();
+            <div class="line-chart-wrap">
+                <svg viewBox="0 0 520 220" class="line-svg" aria-label="Comentarios por día">
+                    <defs>
+                        <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#6366f1" stop-opacity="0.38" />
+                            <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.02" />
+                        </linearGradient>
+                        <linearGradient id="strokeGrad" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stop-color="#a855f7" />
+                            <stop offset="50%" stop-color="#6366f1" />
+                            <stop offset="100%" stop-color="#38bdf8" />
+                        </linearGradient>
+                    </defs>
+
+                    <!-- Líneas guía horizontales -->
+                    <line [attr.x1]="ld.padL" [attr.y1]="ld.topY" [attr.x2]="ld.rightX" [attr.y2]="ld.topY"
+                        class="grid-line" />
+                    <line [attr.x1]="ld.padL" [attr.y1]="ld.midY" [attr.x2]="ld.rightX" [attr.y2]="ld.midY"
+                        class="grid-line" />
+                    <line [attr.x1]="ld.padL" [attr.y1]="ld.baseY" [attr.x2]="ld.rightX" [attr.y2]="ld.baseY"
+                        class="grid-axis" />
+
+                    <text [attr.x]="ld.padL - 8" [attr.y]="ld.topY + 4" class="axis-y-text">{{ ld.max }}</text>
+                    <text [attr.x]="ld.padL - 8" [attr.y]="ld.midY + 4" class="axis-y-text">{{ ld.mid }}</text>
+                    <text [attr.x]="ld.padL - 8" [attr.y]="ld.baseY + 4" class="axis-y-text">0</text>
+
+                    <!-- Área degradada -->
+                    @if (ld.areaPoints) {
+                    <polygon [attr.points]="ld.areaPoints" fill="url(#areaGrad)" />
+                    }
+
+                    <!-- Línea principal -->
+                    @if (ld.puntos.length >= 2) {
+                    <polyline [attr.points]="ld.polylinePoints" fill="none" stroke="url(#strokeGrad)" stroke-width="3"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                    }
+
+                    <!-- Puntos interactivos y etiquetas de fecha -->
+                    @for (p of ld.puntos; track p.fecha) {
+                    <circle [attr.cx]="p.x" [attr.cy]="p.y" r="5" class="line-dot" (mouseenter)="puntoHover.set(p)"
+                        (mouseleave)="puntoHover.set(null)">
+                        <title>{{ p.fecha }}: {{ p.cantidad }} comentarios</title>
+                    </circle>
+                    @if (p.mostrarEtiqueta) {
+                    <text [attr.x]="p.x" [attr.y]="ld.baseY + 18" class="axis-x-text">{{ p.fechaCorta }}</text>
+                    }
+                    }
+                </svg>
+
+                @if (puntoHover(); as ph) {
+                <div class="svg-tooltip">
+                    <strong>{{ ph.fecha }}</strong> · {{ ph.cantidad }} comentario(s)
+                </div>
+                }
+            </div>
+            }
+        </section>
+
+        <!-- GRÁFICO 3: TORTA / DONA (SVG) — Comentarios por publicación -->
+        <section class="card chart-card span-full" appResaltarCard>
+            <div class="chart-head">
+                <div>
+                    <span class="chart-type-badge">Gráfico Circular (Dona)</span>
+                    <h2>Comentarios por publicación</h2>
+                </div>
+                <span class="chart-kpi">Top {{ tortaData().porciones.length }} publicaciones</span>
+            </div>
+
+            @if (tortaData().total === 0) {
+            <div class="empty-chart">Sin comentarios en publicaciones durante este lapso.</div>
+            } @else {
+            @let td = tortaData();
+            <div class="donut-layout">
+                <div class="donut-wrap">
+                    <svg viewBox="0 0 200 200" class="donut-svg" aria-label="Comentarios por publicación">
+                        <g transform="rotate(-90 100 100)">
+                            @for (item of td.porciones; track item.publicacionId; let i = $index) {
+                            <circle cx="100" cy="100" r="70" fill="transparent" [attr.stroke]="item.color"
+                                [attr.stroke-width]="porcionHover() === i ? 34 : 28"
+                                [attr.stroke-dasharray]="item.dasharray" [attr.stroke-dashoffset]="item.dashoffset"
+                                class="donut-slice" (mouseenter)="porcionHover.set(i)"
+                                (mouseleave)="porcionHover.set(null)">
+                                <title>{{ item.titulo }}: {{ item.cantidad }} ({{ item.porcentaje }}%)</title>
+                            </circle>
+                            }
+                        </g>
+                    </svg>
+
+                    <div class="donut-center">
+                        @if (porcionHover() !== null && td.porciones[porcionHover()!]; as sel) {
+                        <strong>{{ sel.porcentaje }}%</strong>
+                        <span>{{ sel.cantidad }} com.</span>
+                        } @else {
+                        <strong>{{ td.total }}</strong>
+                        <span>Comentarios</span>
+                        }
+                    </div>
+                </div>
+
+                <ul class="donut-legend">
+                    @for (item of td.porciones; track item.publicacionId; let i = $index) {
+                    <li class="legend-item" [class.active]="porcionHover() === i" (mouseenter)="porcionHover.set(i)"
+                        (mouseleave)="porcionHover.set(null)">
+                        <span class="legend-dot" [style.background]="item.color"></span>
+                        <span class="legend-title" [title]="item.titulo">{{ item.titulo | resumir:36 }}</span>
+                        <span class="legend-val">{{ item.cantidad }} ({{ item.porcentaje }}%)</span>
+                    </li>
+                    }
+                </ul>
+            </div>
+            }
+        </section>
+    </div>
+    }
+</div>

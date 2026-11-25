@@ -1,5 +1,5 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -14,6 +14,9 @@ export interface Usuario {
     descripcion?: string;
     foto_perfil_url?: string;
     perfil: 'usuario' | 'administrador';
+    activo?: boolean;
+    createdAt?: string;
+
 }
 
 export interface AuthResponse {
@@ -43,17 +46,7 @@ export class AuthService {
     mostrarModalSesion = signal<boolean>(false);
     extendiendoSesion = signal<boolean>(false);
     private sesionTimer?: ReturnType<typeof setTimeout>;
-    private readonly CINCO_MIN_MS = 5 * 60 * 1000;
-
-    private getAuthHeaders(): HttpHeaders {
-        const tokenActual = localStorage.getItem('token');
-        if (tokenActual !== this.token()) {
-            this.token.set(tokenActual);
-        }
-        return new HttpHeaders({
-            Authorization: `Bearer ${tokenActual || ''}`,
-        });
-    }
+    private readonly DOS_MIN_MS = 2 * 60 * 1000;
 
     private decodificarPayload(token: string): { exp?: number } | null {
         try {
@@ -102,7 +95,6 @@ export class AuthService {
             .post<{ mensaje: string; usuario: Usuario }>(
                 `${this.apiUrl}/autorizar`,
                 {},
-                { headers: this.getAuthHeaders() },
             )
             .pipe(
                 tap((res) => {
@@ -111,13 +103,12 @@ export class AuthService {
             );
     }
 
-    //  Refrescar token por 15 minutos nuevos (POST /auth/refrescar)
+    //  Refrescar token por 3 minutos nuevos (POST /auth/refrescar)
     refrescarToken(): Observable<{ mensaje: string; token: string }> {
         return this.http
             .post<{ mensaje: string; token: string }>(
                 `${this.apiUrl}/refrescar`,
                 {},
-                { headers: this.getAuthHeaders() },
             )
             .pipe(
                 tap((res) => {
@@ -150,9 +141,36 @@ export class AuthService {
             .patch<{ mensaje: string; usuario: Usuario }>(
                 `${environment.apiUrl}/usuarios/mi-perfil`,
                 datos,
-                { headers: this.getAuthHeaders() },
             )
             .pipe(tap((res) => this.guardarSesion(this.token()!, res.usuario)));
+    }
+
+    // Listar todos los usuarios (Solo Admin)
+    listarUsuarios(): Observable<Usuario[]> {
+        return this.http.get<Usuario[]>(`${environment.apiUrl}/usuarios`);
+    }
+
+    // Crear nuevo usuario desde Dashboard Admin (permite elegir rol y foto)
+    crearUsuarioAdmin(datos: FormData): Observable<{ mensaje: string; usuario: Usuario }> {
+        return this.http.post<{ mensaje: string; usuario: Usuario }>(
+            `${environment.apiUrl}/usuarios`,
+            datos,
+        );
+    }
+
+    // Baja lógica de usuario / deshabilitar (Solo Admin)
+    deshabilitarUsuario(id: string): Observable<{ mensaje: string; usuario: Usuario }> {
+        return this.http.delete<{ mensaje: string; usuario: Usuario }>(
+            `${environment.apiUrl}/usuarios/${id}`,
+        );
+    }
+
+    // Alta lógica de usuario / rehabilitar (Solo Admin)
+    rehabilitarUsuario(id: string): Observable<{ mensaje: string; usuario: Usuario }> {
+        return this.http.post<{ mensaje: string; usuario: Usuario }>(
+            `${environment.apiUrl}/usuarios/${id}/rehabilitar`,
+            {},
+        );
     }
 
     // Limpia la sesión local sin navegar (lo usa el guard, que redirige por UrlTree)
@@ -165,13 +183,13 @@ export class AuthService {
         this.currentUser.set(null);
     }
 
-    // 6. Cerrar sesión
+    //  Cerrar sesión
     logout(): void {
         this.cerrarSesionLocal();
         this.router.navigate(['/login']);
     }
 
-    // Inicia o reinicia el contador según la expiración real del JWT (avisa 5 min antes)
+    // Inicia o reinicia el contador según la expiración real del JWT (avisa 2 min antes = al minuto 1 de los 3 min)
     iniciarContadorSesion(): void {
         this.detenerContadorSesion();
         const tokenActual = localStorage.getItem('token');
@@ -183,13 +201,15 @@ export class AuthService {
         const tiempoRestanteMs = payload.exp * 1000 - Date.now();
         if (tiempoRestanteMs <= 0) return;
 
-        if (tiempoRestanteMs > this.CINCO_MIN_MS) {
-            const esperaMs = tiempoRestanteMs - this.CINCO_MIN_MS;
+        if (tiempoRestanteMs > this.DOS_MIN_MS) {
+            const esperaMs = tiempoRestanteMs - this.DOS_MIN_MS;
             this.sesionTimer = setTimeout(() => {
                 if (this.isLoggedIn() && !this.estaTokenVencido()) {
                     this.mostrarModalSesion.set(true);
                 }
             }, esperaMs);
+        } else if (this.isLoggedIn()) {
+            this.mostrarModalSesion.set(true);
         }
     }
 

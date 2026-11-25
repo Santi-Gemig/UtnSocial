@@ -50,10 +50,11 @@ export class ComentariosController {
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)
     async modificar(
+        @Param('publicacionId') publicacionId: string,
         @Param('comentarioId') comentarioId: string,
         @Body() dto: CrearComentarioDto,
         @Req() req: any,
     ) {
-        return this.comentariosService.modificar(comentarioId, req.user.sub, dto);
+        return this.comentariosService.modificar(publicacionId, comentarioId, req.user.sub, dto);
     }
 }

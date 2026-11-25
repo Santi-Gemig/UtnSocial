@@ -7,15 +7,21 @@
         </div>
         <ul class="auth-features">
             <li>
-                <span class="icon-wrap"><svg class="icon"><use href="#i-users"/></svg></span>
+                <span class="icon-wrap"><svg class="icon">
+                        <use href="#i-users" />
+                    </svg></span>
                 Conocé gente de tu carrera
             </li>
             <li>
-                <span class="icon-wrap"><svg class="icon"><use href="#i-image"/></svg></span>
+                <span class="icon-wrap"><svg class="icon">
+                        <use href="#i-image" />
+                    </svg></span>
                 Publicá texto e imágenes
             </li>
             <li>
-                <span class="icon-wrap"><svg class="icon"><use href="#i-heart"/></svg></span>
+                <span class="icon-wrap"><svg class="icon">
+                        <use href="#i-heart" />
+                    </svg></span>
                 Reaccioná a lo que te gusta
             </li>
         </ul>
@@ -29,7 +35,9 @@
 
         @if (mensajeError()) {
         <div class="alert alert-danger">
-            <svg class="icon"><use href="#i-alert"/></svg>
+            <svg class="icon">
+                <use href="#i-alert" />
+            </svg>
             {{ mensajeError() }}
         </div>
         }
@@ -38,14 +46,18 @@
             <div class="form-group">
                 <label for="identificador">Correo o Usuario</label>
                 <div class="input-wrap">
-                    <svg class="icon"><use href="#i-at"/></svg>
-                    <input type="text" id="identificador" formControlName="identificador"
+                    <svg class="icon">
+                        <use href="#i-at" />
+                    </svg>
+                    <input type="text" id="identificador" formControlName="identificador" appAutoFocus
                         placeholder="ej: usuario@test.com o santi"
                         [class.input-error]="f.identificador.touched && f.identificador.invalid" />
                 </div>
                 @if (f.identificador.touched && f.identificador.errors?.['required']) {
                 <small class="error-text">
-                    <svg class="icon"><use href="#i-alert"/></svg>
+                    <svg class="icon">
+                        <use href="#i-alert" />
+                    </svg>
                     El correo o nombre de usuario es obligatorio.
                 </small>
                 }
@@ -54,7 +66,9 @@
             <div class="form-group">
                 <label for="password">Contraseña</label>
                 <div class="input-wrap">
-                    <svg class="icon"><use href="#i-lock"/></svg>
+                    <svg class="icon">
+                        <use href="#i-lock" />
+                    </svg>
                     <input type="password" id="password" formControlName="password"
                         placeholder="Mínimo 8 caracteres (1 mayúscula y 1 número)"
                         [class.input-error]="f.password.touched && f.password.invalid" />
@@ -62,17 +76,23 @@
                 @if (f.password.touched && f.password.invalid) {
                 @if (f.password.errors?.['required']) {
                 <small class="error-text">
-                    <svg class="icon"><use href="#i-alert"/></svg>
+                    <svg class="icon">
+                        <use href="#i-alert" />
+                    </svg>
                     La contraseña es obligatoria.
                 </small>
                 } @else if (f.password.errors?.['minlength']) {
                 <small class="error-text">
-                    <svg class="icon"><use href="#i-alert"/></svg>
+                    <svg class="icon">
+                        <use href="#i-alert" />
+                    </svg>
                     Debe tener al menos 8 caracteres.
                 </small>
                 } @else if (f.password.errors?.['pattern']) {
                 <small class="error-text">
-                    <svg class="icon"><use href="#i-alert"/></svg>
+                    <svg class="icon">
+                        <use href="#i-alert" />
+                    </svg>
                     Debe contener al menos una mayúscula y un número.
                 </small>
                 }

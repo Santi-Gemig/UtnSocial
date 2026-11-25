@@ -26,7 +26,6 @@ module.exports = async (req, res) => {
       JSON.stringify({
         error: 'Error al iniciar el servidor backend',
         detalle: err && err.message ? err.message : String(err),
-        stack: err && err.stack ? err.stack : undefined,
       }),
     );
   }

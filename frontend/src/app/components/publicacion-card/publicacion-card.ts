@@ -1,11 +1,13 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, inject, signal } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { PublicacionItem, PublicacionesService } from '../../services/publicaciones';
 import { AuthService } from '../../services/auth';
+import { TiempoRelativoPipe } from '../../pipes/tiempo-relativo.pipe';
+import { ResaltarCardDirective } from '../../directives/resaltar-card.directive';
 
 @Component({
-  imports: [CommonModule, DatePipe, RouterLink],
+  imports: [CommonModule, RouterLink, TiempoRelativoPipe, ResaltarCardDirective],
   selector: 'app-publicacion-card',
   styleUrl: './publicacion-card.css',
   templateUrl: './publicacion-card.html',
@@ -27,7 +29,6 @@ export class PublicacionCard implements OnInit, OnChanges {
 
   // Estados de Modales (reemplaza confirm() y alert())
   mostrarModalEliminar = signal<boolean>(false);
-  mostrarModalLogin = signal<boolean>(false);
   errorMensaje = signal<string | null>(null);
 
   private timerAnimacion?: ReturnType<typeof setTimeout>;
@@ -157,10 +158,6 @@ export class PublicacionCard implements OnInit, OnChanges {
         this.errorMensaje.set(err.error?.message || 'Error al eliminar la publicación');
       },
     });
-  }
-
-  cerrarModalLogin(): void {
-    this.mostrarModalLogin.set(false);
   }
 
   cerrarModalError(): void {

@@ -24,7 +24,7 @@ export class ComentariosService {
         publicacionId: string,
         params: { limit?: number; offset?: number },
     ) {
-        this.validarId(publicacionId, 'ID de publicación inválido');
+        await this.verificarPublicacionActiva(publicacionId);
 
         const limitNum = Number(params.limit);
         const offsetNum = Number(params.offset);
@@ -61,15 +61,7 @@ export class ComentariosService {
         usuarioId: string,
         dto: CrearComentarioDto,
     ) {
-        this.validarId(publicacionId, 'ID de publicación inválido');
-
-        const publicacion = await this.publicacionModel.findOne({
-            _id: publicacionId,
-            activo: true,
-        });
-        if (!publicacion) {
-            throw new NotFoundException('Publicación no encontrada');
-        }
+        await this.verificarPublicacionActiva(publicacionId);
 
         const nuevo = new this.comentarioModel({
             publicacion_id: new Types.ObjectId(publicacionId),
@@ -83,16 +75,19 @@ export class ComentariosService {
         return guardado.populate('usuario_id', 'nombre apellido username foto_perfil_url perfil');
     }
 
-    // Modifica un comentario propio y marcar modificado: true (PUT)
+    // Modifica un comentario propio verificando que pertenezca a la publicación activa (PUT)
     async modificar(
+        publicacionId: string,
         comentarioId: string,
         usuarioId: string,
         dto: CrearComentarioDto,
     ) {
+        await this.verificarPublicacionActiva(publicacionId);
         this.validarId(comentarioId, 'ID de comentario inválido');
 
         const comentario = await this.comentarioModel.findOne({
             _id: comentarioId,
+            publicacion_id: new Types.ObjectId(publicacionId),
             activo: true,
         });
 
@@ -109,6 +104,17 @@ export class ComentariosService {
         const actualizado = await comentario.save();
 
         return actualizado.populate('usuario_id', 'nombre apellido username foto_perfil_url perfil');
+    }
+
+    private async verificarPublicacionActiva(publicacionId: string): Promise<void> {
+        this.validarId(publicacionId, 'ID de publicación inválido');
+        const publicacion = await this.publicacionModel.findOne({
+            _id: publicacionId,
+            activo: true,
+        });
+        if (!publicacion) {
+            throw new NotFoundException('Publicación no encontrada');
+        }
     }
 
     private validarId(id: string, mensaje: string): void {

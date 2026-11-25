@@ -8,6 +8,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, isObjectIdOrHexString } from 'mongoose';
 import { Publicacion, PublicacionDocument } from './schemas/publicacion.schema';
+import { Comentario, ComentarioDocument } from './schemas/comentario.schema';
 import { CrearPublicacionDto } from './dto/crear-publicacion.dto';
 import { ImagenesService } from './imagenes.service';
 
@@ -16,6 +17,8 @@ export class PublicacionesService implements OnModuleInit {
     constructor(
         @InjectModel(Publicacion.name)
         private publicacionModel: Model<PublicacionDocument>,
+        @InjectModel(Comentario.name)
+        private comentarioModel: Model<ComentarioDocument>,
         private readonly imagenes: ImagenesService,
     ) { }
 
@@ -207,6 +210,10 @@ export class PublicacionesService implements OnModuleInit {
 
         publicacion.activo = false;
         await publicacion.save();
+        await this.comentarioModel.updateMany(
+            { publicacion_id: publicacion._id },
+            { $set: { activo: false } },
+        );
 
         return { mensaje: 'Publicación eliminada correctamente (baja lógica)' };
     }

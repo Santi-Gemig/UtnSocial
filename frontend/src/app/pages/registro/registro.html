@@ -75,13 +75,13 @@
                     <label for="username">Nombre de usuario</label>
                     <div class="input-wrap">
                         <svg class="icon"><use href="#i-at"/></svg>
-                        <input type="text" id="username" formControlName="username" placeholder="ej: santi"
+                        <input type="text" id="username" formControlName="username" maxlength="30" placeholder="ej: santi"
                             [class.input-error]="f.username.touched && f.username.invalid" />
                     </div>
                     @if (f.username.touched && f.username.invalid) {
                     <small class="error-text">
                         <svg class="icon"><use href="#i-alert"/></svg>
-                        El usuario es obligatorio.
+                        Obligatorio, sin espacios y máximo 30 caracteres.
                     </small>
                     }
                 </div>
@@ -122,12 +122,16 @@
 
             <div class="form-group">
                 <label for="fecha_nacimiento">Fecha de nacimiento</label>
-                <input type="date" id="fecha_nacimiento" formControlName="fecha_nacimiento"
+                <input type="date" id="fecha_nacimiento" formControlName="fecha_nacimiento" [max]="hoyFecha"
                     [class.input-error]="f.fecha_nacimiento.touched && f.fecha_nacimiento.invalid" />
                 @if (f.fecha_nacimiento.touched && f.fecha_nacimiento.invalid) {
                 <small class="error-text">
                     <svg class="icon"><use href="#i-alert"/></svg>
+                    @if (f.fecha_nacimiento.errors?.['fechaFutura']) {
+                    La fecha de nacimiento no puede ser futura.
+                    } @else {
                     Selecciona tu fecha de nacimiento.
+                    }
                 </small>
                 }
             </div>
@@ -156,7 +160,7 @@
 
             <div class="form-group">
                 <label for="descripcion">Descripción breve</label>
-                <textarea id="descripcion" formControlName="descripcion" rows="2"
+                <textarea id="descripcion" formControlName="descripcion" rows="2" maxlength="300"
                     placeholder="Cuéntanos un poco sobre ti..."></textarea>
             </div>
 

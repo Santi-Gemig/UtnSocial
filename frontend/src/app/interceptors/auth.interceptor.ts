@@ -9,9 +9,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     const authService = inject(AuthService);
     const router = inject(Router);
 
-    // Adjunta el token a todas las peticiones hacia nuestra API (si no lo trae ya)
+    const esApiPropia = req.url.startsWith(`${environment.apiUrl}/`);
+    const esEndpointPublico =
+        req.url.includes('/auth/login') || req.url.includes('/auth/registro');
+
+    // Adjunta el token a todas las peticiones autenticadas hacia nuestra API
     const token = localStorage.getItem('token');
-    if (token && req.url.startsWith(environment.apiUrl) && !req.headers.has('Authorization')) {
+    if (token && esApiPropia && !esEndpointPublico && !req.headers.has('Authorization')) {
         req = req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
     }
 
@@ -23,8 +27,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
                 urlActual.startsWith('/login') ||
                 urlActual.startsWith('/registro') ||
                 urlActual.startsWith('/cargando') ||
-                req.url.includes('/auth/login') ||
-                req.url.includes('/auth/registro');
+                esEndpointPublico;
 
             if (error.status === 401 && !esRutaAuth) {
                 authService.logout();

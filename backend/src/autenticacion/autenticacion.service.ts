@@ -19,6 +19,8 @@ export class AutenticacionService {
         archivo?: Express.Multer.File,
     ) {
         let publicId: string | undefined;
+        // Ignora cualquier URL externa enviada en el body; solo se acepta archivo real vía Multer/Cloudinary
+        crearUsuarioDto.foto_perfil_url = '';
 
         if (archivo) {
             const buffer = await this.imagenes.normalizar(archivo);
@@ -28,7 +30,10 @@ export class AutenticacionService {
         }
 
         try {
-            const usuario = await this.usuariosService.crear(crearUsuarioDto);
+            const usuario = await this.usuariosService.crear({
+                ...crearUsuarioDto,
+                perfil: 'usuario',
+            });
             const usuarioObj = (usuario as any).toObject ? (usuario as any).toObject() : { ...usuario };
             delete usuarioObj.password;
 
@@ -105,13 +110,24 @@ export class AutenticacionService {
         }
     }
 
-    // 4. Refrescar token por otros 15 minutos manteniendo el mismo payload 
+    // 4. Refrescar token por otros 3 minutos validando que el usuario siga activo y con su rol actual
     async refrescar(userPayload: any) {
+        let usuario: any;
+        try {
+            usuario = await this.usuariosService.buscarPorId(userPayload.sub);
+        } catch {
+            throw new UnauthorizedException('Usuario no válido o deshabilitado');
+        }
+
+        if (!usuario || usuario.activo === false) {
+            throw new UnauthorizedException('Usuario no válido o deshabilitado');
+        }
+
         const payload = {
-            sub: userPayload.sub,
-            correo: userPayload.correo,
-            username: userPayload.username,
-            perfil: userPayload.perfil,
+            sub: usuario._id,
+            correo: usuario.correo,
+            username: usuario.username,
+            perfil: usuario.perfil,
         };
 
         const token = await this.jwtService.signAsync(payload);

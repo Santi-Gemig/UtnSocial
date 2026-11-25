@@ -1,21 +1,17 @@
 import { Component, inject, signal } from '@angular/core';
 import {
-  AbstractControl,
   FormControl,
   FormGroup,
   ReactiveFormsModule,
-  ValidationErrors,
   Validators,
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth';
-
-// Validador personalizado para chequear que las contraseñas coincidan
-function passwordsCoinciden(control: AbstractControl): ValidationErrors | null {
-  const password = control.get('password')?.value;
-  const repetirPassword = control.get('repetir_password')?.value;
-  return password === repetirPassword ? null : { noCoinciden: true };
-}
+import {
+  fechaNoFutura,
+  obtenerFechaHoyInput,
+  passwordsCoinciden,
+} from '../../validators/usuario.validators';
 
 @Component({
   imports: [ReactiveFormsModule, RouterLink],
@@ -27,6 +23,8 @@ export class Registro {
   private authService = inject(AuthService);
   private router = inject(Router);
 
+  readonly hoyFecha = obtenerFechaHoyInput();
+
   cargando = signal<boolean>(false);
   mensajeError = signal<string | null>(null);
   fotoBase64 = signal<string>(''); // Solo para previsualización en pantalla
@@ -34,18 +32,30 @@ export class Registro {
 
   registroForm = new FormGroup(
     {
-      nombre: new FormControl('', [Validators.required]),
-      apellido: new FormControl('', [Validators.required]),
+      nombre: new FormControl('', [
+        Validators.required,
+        Validators.maxLength(50),
+        Validators.pattern(/\S/),
+      ]),
+      apellido: new FormControl('', [
+        Validators.required,
+        Validators.maxLength(50),
+        Validators.pattern(/\S/),
+      ]),
       correo: new FormControl('', [Validators.required, Validators.email]),
-      username: new FormControl('', [Validators.required]),
+      username: new FormControl('', [
+        Validators.required,
+        Validators.maxLength(30),
+        Validators.pattern(/^\S+$/),
+      ]),
       password: new FormControl('', [
         Validators.required,
         Validators.minLength(8),
         Validators.pattern(/^(?=.*[A-Z])(?=.*\d)/),
       ]),
       repetir_password: new FormControl('', [Validators.required]),
-      fecha_nacimiento: new FormControl('', [Validators.required]),
-      descripcion: new FormControl(''),
+      fecha_nacimiento: new FormControl('', [Validators.required, fechaNoFutura]),
+      descripcion: new FormControl('', [Validators.maxLength(300)]),
       perfil: new FormControl<'usuario' | 'administrador'>('usuario'),
     },
     { validators: passwordsCoinciden }
@@ -81,14 +91,14 @@ export class Registro {
 
     // Armamos FormData tal cual se vio en la clase 11
     const datos = new FormData();
-    datos.append('nombre', formValues.nombre!);
-    datos.append('apellido', formValues.apellido!);
-    datos.append('correo', formValues.correo!);
-    datos.append('username', formValues.username!);
+    datos.append('nombre', formValues.nombre!.trim());
+    datos.append('apellido', formValues.apellido!.trim());
+    datos.append('correo', formValues.correo!.trim());
+    datos.append('username', formValues.username!.trim());
     datos.append('password', formValues.password!);
     datos.append('fecha_nacimiento', formValues.fecha_nacimiento!);
-    if (formValues.descripcion) {
-      datos.append('descripcion', formValues.descripcion);
+    if (formValues.descripcion?.trim()) {
+      datos.append('descripcion', formValues.descripcion.trim());
     }
     datos.append('perfil', 'usuario');
 

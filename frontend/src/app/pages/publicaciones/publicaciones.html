@@ -1,4 +1,4 @@
-<div class="feed-layout" [class.guest-layout]="!authService.isLoggedIn()">
+<div class="feed-layout">
     <!-- Columna lateral de resumen de perfil (solo si está logueado) -->
     @if (authService.currentUser(); as u) {
     <aside class="feed-sidebar">
@@ -97,26 +97,6 @@
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
-        } @else {
-        <!-- Banner elegante para Invitados (sin alert ni pantallas rotas) -->
-        <div class="invitado-banner-card">
-            <div class="invitado-banner-content">
-                <span class="invitado-banner-icon">
-                    <svg class="icon"><use href="#i-sparkles"/></svg>
-                </span>
-                <div class="invitado-banner-info">
-                    <h3 class="invitado-title">¡Estás navegando en modo invitado!</h3>
-                    <p class="invitado-desc">
-                        Podés explorar libremente todas las publicaciones de la comunidad.
-                        Para compartir tus propias ideas o dar "Me gusta", iniciá sesión con tu cuenta.
-                    </p>
-                </div>
-            </div>
-            <div class="invitado-banner-actions">
-                <a routerLink="/login" class="btn btn-light btn-invitado-login">Iniciar Sesión</a>
-                <a routerLink="/registro" class="btn btn-outline-light btn-invitado-register">Crear cuenta</a>
             </div>
         </div>
         }

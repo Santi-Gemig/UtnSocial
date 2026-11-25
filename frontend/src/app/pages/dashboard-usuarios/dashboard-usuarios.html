@@ -1,0 +1,270 @@
+<div class="dash-container">
+    <header class="dash-header card">
+        <div>
+            <h1 class="dash-title">
+                <span class="feed-title-pill"></span>
+                Gestión de Usuarios
+            </h1>
+            <p class="dash-subtitle">Alta de cuentas (Usuario o Administrador) y control de habilitación.</p>
+        </div>
+        <span class="dash-counter">{{ usuarios().length }} registrados</span>
+    </header>
+
+    <div class="dash-grid">
+        <!-- 1. Formulario de Alta de Usuario -->
+        <section class="card form-card">
+            <h2 class="section-heading">
+                <svg class="icon">
+                    <use href="#i-user-plus" />
+                </svg>
+                Crear nuevo usuario
+            </h2>
+
+            @if (mensajeError()) {
+            <div class="alert alert-danger">
+                <svg class="icon">
+                    <use href="#i-alert" />
+                </svg>
+                {{ mensajeError() }}
+            </div>
+            }
+
+            @if (mensajeExito()) {
+            <div class="alert alert-success">
+                <svg class="icon">
+                    <use href="#i-shield" />
+                </svg>
+                {{ mensajeExito() }}
+            </div>
+            }
+
+            <form [formGroup]="usuarioForm" (ngSubmit)="crearUsuario()" class="dash-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="du-nombre">Nombre</label>
+                        <input id="du-nombre" type="text" formControlName="nombre" maxlength="50" placeholder="Nombre" />
+                        @if (f.nombre.touched && f.nombre.invalid) {
+                        <small class="error-text">El nombre es obligatorio.</small>
+                        }
+                    </div>
+                    <div class="form-group">
+                        <label for="du-apellido">Apellido</label>
+                        <input id="du-apellido" type="text" formControlName="apellido" maxlength="50" placeholder="Apellido" />
+                        @if (f.apellido.touched && f.apellido.invalid) {
+                        <small class="error-text">El apellido es obligatorio.</small>
+                        }
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="du-correo">Correo electrónico</label>
+                        <input id="du-correo" type="email" formControlName="correo" placeholder="correo@ejemplo.com" />
+                        @if (f.correo.touched && f.correo.invalid) {
+                        <small class="error-text">Ingresá un correo válido.</small>
+                        }
+                    </div>
+                    <div class="form-group">
+                        <label for="du-username">Nombre de usuario</label>
+                        <input id="du-username" type="text" formControlName="username" maxlength="30" placeholder="sin espacios" />
+                        @if (f.username.touched && f.username.invalid) {
+                        <small class="error-text">Usuario obligatorio (sin espacios, máx. 30).</small>
+                        }
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="du-pass">Contraseña</label>
+                        <input id="du-pass" type="password" formControlName="password"
+                            placeholder="Mín. 8 car., 1 mayús. y 1 núm." />
+                        @if (f.password.touched && f.password.invalid) {
+                        <small class="error-text">Mínimo 8 caracteres, 1 mayúscula y 1 número.</small>
+                        }
+                    </div>
+                    <div class="form-group">
+                        <label for="du-pass2">Repetir contraseña</label>
+                        <input id="du-pass2" type="password" formControlName="repetir_password"
+                            placeholder="Repetí la contraseña" />
+                        @if (usuarioForm.hasError('noCoinciden') && f.repetir_password.touched) {
+                        <small class="error-text">Las contraseñas no coinciden.</small>
+                        }
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="du-fecha">Fecha de nacimiento</label>
+                        <input id="du-fecha" type="date" formControlName="fecha_nacimiento" [max]="hoyFecha" />
+                        @if (f.fecha_nacimiento.touched && f.fecha_nacimiento.invalid) {
+                        <small class="error-text">
+                            {{ f.fecha_nacimiento.errors?.['fechaFutura'] ? 'La fecha no puede ser futura.' : 'La fecha es obligatoria.' }}
+                        </small>
+                        }
+                    </div>
+
+                    <!-- Radio buttons para elegir el perfil (usuario / administrador) -->
+                    <div class="form-group">
+                        <label>Perfil de la cuenta</label>
+                        <div class="radio-group">
+                            <label class="radio-card" [class.selected]="f.perfil.value === 'usuario'">
+                                <input type="radio" formControlName="perfil" value="usuario" />
+                                <span>Usuario</span>
+                            </label>
+                            <label class="radio-card" [class.selected]="f.perfil.value === 'administrador'">
+                                <input type="radio" formControlName="perfil" value="administrador" />
+                                <span>Administrador</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="du-desc">Descripción breve (opcional)</label>
+                    <textarea id="du-desc" formControlName="descripcion" rows="2" maxlength="300"
+                        placeholder="Breve presentación..."></textarea>
+                </div>
+
+                <div class="photo-row">
+                    <label class="btn btn-secondary btn-file">
+                        <svg class="icon">
+                            <use href="#i-upload" />
+                        </svg>
+                        Foto de perfil (opcional)
+                        <input type="file" (change)="onFileSelected($event)" accept="image/jpeg,image/png,image/webp"
+                            hidden />
+                    </label>
+
+                    @if (fotoBase64()) {
+                    <div class="preview-chip">
+                        <img [src]="fotoBase64()" alt="Vista previa" class="preview-img" />
+                        <button type="button" (click)="quitarFoto()" class="icon-btn danger" title="Quitar">
+                            <svg class="icon">
+                                <use href="#i-x" />
+                            </svg>
+                        </button>
+                    </div>
+                    }
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" [disabled]="creando()">
+                    {{ creando() ? 'Creando usuario...' : 'Registrar usuario' }}
+                </button>
+            </form>
+        </section>
+
+        <!-- 2. Listado de Usuarios (Alta / Baja lógica) -->
+        <section class="card list-card">
+            <h2 class="section-heading">
+                <svg class="icon">
+                    <use href="#i-users" />
+                </svg>
+                Listado de usuarios
+            </h2>
+
+            @if (errorAccion()) {
+            <div class="alert alert-danger">
+                <svg class="icon">
+                    <use href="#i-alert" />
+                </svg>
+                {{ errorAccion() }}
+            </div>
+            }
+
+            @if (cargando()) {
+            <div class="users-list">
+                <div class="skeleton-card">
+                    <div class="skeleton-row">
+                        <div class="skeleton sk-avatar"></div>
+                        <div style="flex:1;display:grid;gap:6px">
+                            <div class="skeleton sk-line" style="width:45%"></div>
+                            <div class="skeleton sk-line" style="width:30%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            } @else if (usuarios().length === 0) {
+            <div class="empty-state">
+                <h3>No hay usuarios registrados</h3>
+                <p>Creá el primer usuario desde el formulario.</p>
+            </div>
+            } @else {
+            <div class="users-list">
+                @for (u of usuarios(); track u._id) {
+                <article class="user-item" [class.user-disabled]="u.activo === false">
+                    <div class="user-left">
+                        <div class="avatar-ring">
+                            @if (u.foto_perfil_url) {
+                            <img [src]="u.foto_perfil_url" [alt]="u.nombre" class="author-avatar" />
+                            } @else {
+                            <div class="author-avatar-placeholder">
+                                {{ ((u.nombre?.[0] || '') + (u.apellido?.[0] || '')).toUpperCase() || 'U' }}
+                            </div>
+                            }
+                        </div>
+
+                        <div class="user-meta">
+                            <div class="user-top">
+                                <strong>{{ u.nombre }} {{ u.apellido }}</strong>
+                                <span class="badge" [class.badge-admin]="u.perfil === 'administrador'">
+                                    {{ u.perfil === 'administrador' ? 'Admin' : 'Usuario' }}
+                                </span>
+                                <span class="badge" [class.badge-ok]="u.activo !== false"
+                                    [class.badge-off]="u.activo === false">
+                                    {{ u.activo === false ? 'Deshabilitado' : 'Activo' }}
+                                </span>
+                            </div>
+                            <span class="user-sub">&#64;{{ u.username }} · {{ u.correo }}</span>
+                            <span class="user-date">Nac.: {{ u.fecha_nacimiento | date:'dd/MM/yyyy' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="user-actions">
+                        @if (esMiUsuario(u)) {
+                        <span class="self-tag">Tu cuenta</span>
+                        } @else if (u.activo === false) {
+                        <button type="button" (click)="rehabilitar(u)" class="btn btn-primary btn-sm"
+                            [disabled]="procesandoId() === u._id">
+                            {{ procesandoId() === u._id ? 'Procesando...' : 'Rehabilitar' }}
+                        </button>
+                        } @else {
+                        <button type="button" (click)="solicitarDeshabilitar(u)" class="btn btn-danger btn-sm"
+                            [disabled]="procesandoId() === u._id">
+                            {{ procesandoId() === u._id ? 'Procesando...' : 'Deshabilitar' }}
+                        </button>
+                        }
+                    </div>
+                </article>
+                }
+            </div>
+            }
+        </section>
+    </div>
+
+    <!-- Modal de confirmación para baja lógica (sin confirm()) -->
+    @if (usuarioADeshabilitar(); as ud) {
+    <div class="modal-backdrop" (click)="cancelarDeshabilitar()">
+        <div class="modal-dialog" (click)="$event.stopPropagation()">
+            <div class="modal-icon-wrapper danger-icon">
+                <svg class="icon">
+                    <use href="#i-alert" />
+                </svg>
+            </div>
+            <h4 class="modal-title">¿Deshabilitar usuario?</h4>
+            <p class="modal-description">
+                <strong>&#64;{{ ud.username }}</strong> no podrá ingresar a la aplicación hasta que lo rehabilites.
+            </p>
+            <div class="modal-actions">
+                <button (click)="cancelarDeshabilitar()" class="btn btn-secondary" type="button"
+                    [disabled]="procesandoId() === ud._id">
+                    Cancelar
+                </button>
+                <button (click)="confirmarDeshabilitar()" class="btn btn-danger" type="button"
+                    [disabled]="procesandoId() === ud._id">
+                    {{ procesandoId() === ud._id ? 'Deshabilitando...' : 'Sí, deshabilitar' }}
+                </button>
+            </div>
+        </div>
+    </div>
+    }
+</div>

@@ -6,6 +6,8 @@ import { Publicacion, PublicacionSchema } from './schemas/publicacion.schema';
 import { Comentario, ComentarioSchema } from './schemas/comentario.schema';
 import { ComentariosController } from './comentarios.controller';
 import { ComentariosService } from './comentarios.service';
+import { EstadisticasController } from './estadisticas.controller';
+import { EstadisticasService } from './estadisticas.service';
 import { ImagenesService } from './imagenes.service';
 
 @Module({
@@ -15,8 +17,8 @@ import { ImagenesService } from './imagenes.service';
       { name: Comentario.name, schema: ComentarioSchema },
     ]),
   ],
-  controllers: [PublicacionesController, ComentariosController],
-  providers: [PublicacionesService, ComentariosService, ImagenesService],
+  controllers: [PublicacionesController, ComentariosController, EstadisticasController],
+  providers: [PublicacionesService, ComentariosService, EstadisticasService, ImagenesService],
   exports: [PublicacionesService, ComentariosService, ImagenesService],
 })
 export class PublicacionesModule { }
